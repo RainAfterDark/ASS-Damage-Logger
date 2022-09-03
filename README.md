@@ -11,8 +11,8 @@ Proof-of-concept packet damage logger for anime game with Akebi-Sniffer-Scriptin
   
 - Using the script
   - I've made the script work specifically with packet level filter **ENABLED** to save memory, since we don't need every packet getting saved.
-  - I recommend that you first disconnect the pipe in settings while preparing to log a rotation, and clearing packets (right click any packet in the capture window and a context menu should open)
-  - Whenever you're ready, make sure that you connect the pipe again **BEFORE** changing scenes/swapping characters. This is to capture the packet telling the server the characters you're using, which the script needs.
+  - I recommend that you first disconnect the pipe in settings while preparing to log a rotation, and clearing packets (right click any packet in the capture window and a context menu should open).
+  - Whenever you're ready, make sure that you connect the pipe again **BEFORE** changing scenes or swapping teams. This is to capture the packet telling the server the characters you're using, which the script needs.
   - Do stuff once you're connected
   - To actually "log" the damage, you can disconnect the pipe again now (to save memory). If you see packets are still flooding, check the packet queue size on the menu bar.
   - Once the queue size is 0, now you have to **DISABLE** packet level filter and then hit apply to generate logs.
