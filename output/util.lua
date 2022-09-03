@@ -107,7 +107,7 @@ function util.write_row(type, uid, delta, source, attacker, damage, crit, apply,
 	write_col(uid, 6)
 	write_col(delta, 7)
 	write_col(source, 35)
-	write_col(attacker, 9)
+	write_col(attacker, 9, theme.avatar[attacker])
 	write_col(damage, 15, damage_color(damage))
 	write_col(crit, 5, theme.bool[crit])
 	write_col(apply, 5, theme.bool[apply])
