@@ -22,11 +22,12 @@ SHOULD_RESOLVE_NAMES = true
 --This applies to avatar, gadget, skill, element, and amp type names
 
 SHOW_PACKETS_ON_FILTER = true
---Disabling will prevent packets to show up in captures window after applying filter
---(Might improve performance, only enable when you really have to)
+--Option to show packets in captures window after applying filter
+--Disabling *might* improve performance but I don't think I've seen much of a difference
 
 --#endregion
 
+local packet_ids = require("data.packet_ids")
 local resolver = require("resolver")
 local util = require("output.util")
 util.init()
@@ -43,7 +44,7 @@ local last_packets = {
 function on_filter(packet)
 
 	local uid = packet:uid()
-	local name = packet:name()
+	local pid = packet:mid()
 	local first_run = false
 
 	if uid > last_uid then
@@ -52,7 +53,7 @@ function on_filter(packet)
 	end
 
 	--Packet is always sent when loading into a new scene / changing teams (even just swapping characters)
-	if name == "SceneTeamUpdateNotify" then
+	if pid == packet_ids.SceneTeamUpdateNotify then
 		if first_run then return true end
 		if last_packets.SceneTeamUpdateNotify >= uid then
 			return SHOW_PACKETS_ON_FILTER
@@ -85,8 +86,13 @@ function on_filter(packet)
 		end
 
 		return SHOW_PACKETS_ON_FILTER
+	end
 
-	elseif name == "EvtCreateGadgetNotify" then
+	if packet:direction() ~= NetIODirection.Send then
+		return false
+	end
+
+	if pid == packet_ids.EvtCreateGadgetNotify then
 		local node = packet:content():node()
 		local entity_id = node:field("entity_id"):value():get()
 		
@@ -100,18 +106,14 @@ function on_filter(packet)
 		return true
 	end
 
-	if packet:direction() ~= NetIODirection.Send then
-		return false
-	end
-
-	if name == "UnionCmdNotify" then
+	if pid == packet_ids.UnionCmdNotify then
 		if last_uid > uid then
 			return false
 		end
 		local list_len = #(packet:content():node():field("cmd_list"):value():get())
 		return list_len > 1
 	
-	elseif name == "CombatInvocationsNotify" then
+	elseif pid == packet_ids.CombatInvocationsNotify then
 		local node = packet:content():node()
 		local list = node:field("invoke_list"):value():get()[1]:get()
 		local arg = list:field("argument_type"):value():get()
@@ -170,7 +172,7 @@ function on_filter(packet)
 			return SHOW_PACKETS_ON_FILTER
 		end
 	
-	elseif name == "AbilityInvocationsNotify" then
+	elseif pid == packet_ids.AbilityInvocationsNotify then
 		local node = packet:content():node()
 		local list = node:field("invokes"):value():get()[1]:get()
 		local arg = list:field("argument_type"):value():get()
@@ -210,7 +212,7 @@ function on_filter(packet)
 			return SHOW_PACKETS_ON_FILTER
 		end
 	
-	elseif name == "EvtDoSkillSuccNotify" and LOG_SKILL_CASTS then
+	elseif pid == packet_ids.EvtDoSkillSuccNotify and LOG_SKILL_CASTS then
 
 		if first_run then return true end
 		if last_packets.EvtDoSkillSuccNotify >= uid then
