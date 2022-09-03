@@ -19,6 +19,8 @@ Proof-of-concept packet damage logger for anime game with Akebi-Sniffer-Scriptin
   - From here you can clear your saved packets again to save memory and do it over again. Remember to turn packet level filter back **ON**.
   - Clear the console by reloading the script. You can also mess with the configs. Do whatever.
   
+  I have to mention that crashes after saving changes to the code can happen **very frequently** for some reason I can't quite understand, so just be warned. I think it helps reloading before applying changes to the script.
+  
   ## Findings/Wiki/How It Works/What Doesn't Work/What Should Work section: TODO
   
   Also if you have nothing else to do help me set a color code for individual characters (or an entirely new color scheme)! Just edit output/theme.lua :)
