@@ -27,6 +27,8 @@ SHOW_PACKETS_ON_FILTER = true
 
 --#endregion
 
+GAME_VERSION = "3.0.0"
+
 local packet_ids = require("data.packet_ids")
 local resolver = require("resolver")
 local util = require("output.util")

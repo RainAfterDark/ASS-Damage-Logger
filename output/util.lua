@@ -127,10 +127,10 @@ end
 function util.init()
 	os.execute("cls")
 	util.reset_style()
-	io.write("\27[4m", gradient.generate("ASS Damage ", {255, 100, 255}, {100, 255, 255}))
-	io.write(gradient.generate("Logger v0.1.0", {100, 255, 255}, {100, 255, 100}))
+	io.write("\27[4m", gradient.generate(" ASS Damage ", {255, 100, 255}, {100, 255, 255}))
+	io.write(gradient.generate("Logger v" .. GAME_VERSION, {100, 255, 255}, {100, 255, 100}))
 	util.reset_style()
-	io.write(" (beta?) by Ame\n  Anime game data v3.0.0\n\n")
+	io.write(" (beta?) by Ame\n\n")
 
 	if FILE_LOGGING then
 		log_file = assert(io.open("latest.txt", "a"))
