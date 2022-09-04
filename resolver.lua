@@ -4,6 +4,7 @@ local resolver = {}
 local gadget_names = require("data.gadget_names")
 local avatar_names = require("data.avatar_names")
 local skill_names = require("data.skill_names")
+local ability_hashes = require("data.ability_hashes")
 
 local id_types = {
     [1000] = "AvatarID",
@@ -11,7 +12,7 @@ local id_types = {
     [1509] = "Team",
     [1677] = "Avatar",
     [1678] = "Avatar",
-    [1845] = "Environment",
+    [1845] = "World",
     [3271] = "Reaction",
     [3355] = "Monster",
     [3356] = "Monster",
@@ -31,6 +32,7 @@ local amp_type_names = {
 }
 
 local reaction_names = { --AID = reaction??
+	[1] = "Bloom",
 	[10] = "Overload", [14] = "Electro-Charged", [19] = "Superconduct", 
 	[20] = "Swirl (Pyro)", [21] = "Swirl (Electro)", [22] = "Swirl (Hydro)", [23] = "Swirl (Cryo)",
 	[31] = "Shatter", [37] = "Burgeon"
@@ -38,6 +40,7 @@ local reaction_names = { --AID = reaction??
 --#endregion
 
 local avatar_ids = {}
+local avatar_abilities = {}
 local gadget_owner_ids = {}
 local gadget_config_ids = {}
 local unresolved_ids = {}
@@ -49,21 +52,18 @@ function resolver.id_type(id)
 	return id_types[tonumber(tostring(id):sub(1, 4))] or "Unknown"
 end
 
-function resolver.get_id(id, rcount)
+function resolver.get_id(id)
 	id = tonumber(id)
-	rcount = rcount or 0
-	rcount = rcount + 1
 	local type = resolver.id_type(id)
 	
 	if type == "AvatarID" then
 		if SHOULD_RESOLVE_NAMES then
 			return avatar_names[id]
-		else
-			return id
 		end
+		return id
 
 	elseif type == "Avatar" then
-		local resolved = resolver.get_id(avatar_ids[id], rcount)
+		local resolved = resolver.get_id(avatar_ids[id])
 		if not resolved then
 			if not unresolved_ids[id] then
 				io.write("Warning: cannot resolve ID for ", id, ", please make sure you've captured SceneTeamUpdateNotify (change scene/team)\n")
@@ -81,14 +81,23 @@ function resolver.get_id(id, rcount)
 		return monster_ids[id]
 
 	elseif type == "Gadget" then
-		local resolved = resolver.get_id(gadget_owner_ids[id], rcount)
+		local resolved = resolver.get_id(gadget_owner_ids[id])
 		return resolved
 	
-	elseif type == "Environment" or type == "Team" then
+	elseif type == "World" or type == "Team" then
 		return type --would be odd if this is Team but eh
 	end
 
-	return id or "IDFK LOL"
+	return id
+end
+
+function resolver.get_apply(a)
+	if a == 1 then
+		return true
+	elseif a == 0 then
+		return false
+	end
+	return a
 end
 
 function resolver.get_element(id)
@@ -113,23 +122,30 @@ function resolver.get_attacker(attacker, aid, mid, defender)
 	return resolver.get_id(attacker)
 end
 
-function resolver.get_source(attacker)
+function resolver.get_source(attacker, aid)
 	local type = resolver.id_type(attacker)
 
     if type == "Gadget" then
 		if SHOULD_RESOLVE_NAMES then
-			return gadget_names[gadget_config_ids[attacker]] or "Unknown"
+			return "(G) " .. gadget_names[gadget_config_ids[attacker]]
 		end
         return gadget_config_ids[attacker]
 
     elseif type == "Avatar" then
+		if avatar_abilities[attacker][aid] then
+			return "(A) " .. avatar_abilities[attacker][aid]
+		end
 		return "Direct"
 	end
 
 	return type
 end
 
-function resolver.get_reaction(aid, element)
+function resolver.get_reaction(aid, element, amp_type)
+
+	local amp = amp_type_names[amp_type]
+	if amp ~= "None" then return amp end
+
 	local reaction = reaction_names[aid]
 	if reaction then
         element = resolver.get_element(element)
@@ -137,8 +153,8 @@ function resolver.get_reaction(aid, element)
           (reaction == "Electro-Charged" and element ~= "Electro") or
           (reaction == "Superconduct" and element ~= "Cryo") or
 		  (reaction == "Shatter" and element ~= "Physical") or
-		  (reaction == "Burgeon" and element ~= "Dendro") then
-            return "Conflict?" --if this happens oh well
+		  ((reaction == "Burgeon" or reaction == "Bloom") and element ~= "Dendro") then
+            return "None"
         end
         return reaction
 	end
@@ -156,12 +172,21 @@ function resolver.add_avatar(entity_id, avatar_id)
     avatar_ids[entity_id] = avatar_id
 end
 
+function resolver.add_ability_hash(avatar_id, aid, hash)
+	if ability_hashes[hash] then
+		if not avatar_abilities[avatar_id] then
+			avatar_abilities[avatar_id] = {}
+		end
+		avatar_abilities[avatar_id][aid] = ability_hashes[hash]
+	end
+end
+
 function resolver.add_gadget(entity_id, owner_id, config_id)
     gadget_owner_ids[entity_id] = owner_id
     gadget_config_ids[entity_id] = config_id
 end
 
-function resolver.add_ability(aid, mid, entity_id, apply_id)
+function resolver.add_ability_invoke(aid, mid, entity_id, apply_id)
     if not ability_map[aid] then ability_map[aid] = {} end
     if not ability_map[aid][mid] then ability_map[aid][mid] = {} end
     --[[if ability_map[aid][mid][entity_id] then
@@ -177,6 +202,14 @@ end
 function resolver.reset_ids()
     for k in pairs(avatar_ids) do avatar_ids[k] = nil end
     for k in pairs(unresolved_ids) do unresolved_ids[k] = nil end
+
+	for avatar_id in pairs(avatar_abilities) do
+		for aid in pairs(avatar_abilities[avatar_id]) do
+			avatar_abilities[avatar_id][aid] = nil
+		end
+		avatar_abilities[avatar_id] = nil
+	end
+
     for aid in pairs(ability_map) do 
         for mid in pairs(ability_map[aid]) do
             for entity_id in pairs(ability_map[aid][mid]) do

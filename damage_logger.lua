@@ -69,18 +69,28 @@ function on_filter(packet)
 		for k in ipairs(list) do
 			local team_avatar = list[k]:get()
 			local entity_id = team_avatar:field("entity_id"):value():get()
+
 			local entity_info = team_avatar:field("scene_entity_info"):value():get()
 			local avatar_info = entity_info:field("avatar"):value():get()
 			local avatar_id = avatar_info:field("avatar_id"):value():get()
 			resolver.add_avatar(entity_id, avatar_id)
 			team_text = team_text .. resolver.get_id(avatar_id) .. (k == 4 and "" or ", ")
+
+			local block = team_avatar:field("ability_control_block"):value():get()
+			local embryos = block:field("ability_embryo_list"):value():get()
+
+			for _, a in ipairs(embryos) do
+				local aid = a:get():field("ability_id"):value():get()
+				local hash = a:get():field("ability_name_hash"):value():get()
+				resolver.add_ability_hash(entity_id, aid, hash)
+			end
 		end
 
 		if TABLE_FORMAT then
 			util.color_bg(240)
-			util.write(" ", util.pad(team_text, 205), "\n")
+			util.write(" ", util.pad(team_text, 206), "\n")
 			util.reset_style()
-			util.write_row("Type", "UID", "Delta", "Source / Skill", "Attacker", "Damage", "Crit", "Apply", "Element", "Reaction", "Amp Type", "Amp Rate", "Count", "AID", "MID", "Defender")
+			util.write_row("Type", "UID", "Delta", "Source (Gadget / Ability)", "Attacker", "Damage", "Crit", "Apply", "Element", "Reaction", "Amp Rate", "C", "AID", "MID", "Defender")
 		else
 			util.write(team_text, "\n")
 		end
@@ -142,7 +152,7 @@ function on_filter(packet)
 			last_packets.CombatInvocationsNotify = uid
 
 			local crit = attack:field("is_crit"):value():get()
-			local apply = attack:field("element_durability_attenuation"):value():get() == 1
+			local apply = resolver.get_apply(attack:field("element_durability_attenuation"):value():get())
 			local element = attack:field("element_type"):value():get()
 			local amp_type = attack:field("amplify_reaction_type"):value():get()
 			local amp_rate = attack:field("element_amplify_rate"):value():get()
@@ -151,10 +161,10 @@ function on_filter(packet)
 			local ability = attack:field("ability_identifier"):value():get()
 			local aid = ability:field("instanced_ability_id"):value():get() or 0
 			local mid = ability:field("instanced_modifier_id"):value():get() or 0
-			local reaction = resolver.get_reaction(aid, element)
+			local reaction = resolver.get_reaction(aid, element, amp_type)
 
 			local attacker = attack:field("attacker_id"):value():get()
-			local source = resolver.get_source(attacker)
+			local source = resolver.get_source(attacker, aid)
 			attacker = resolver.get_attacker(attacker, aid, mid, defender)
 			defender = resolver.id_type(defender) == "Gadget" and resolver.get_source(defender) or resolver.get_id(defender)
 
@@ -168,7 +178,7 @@ function on_filter(packet)
 			if last_time == 0 then delta = 0 end
 			last_time = timestamp
 			
-			util.write_row("DAMAGE", uid, delta, source, attacker, damage, crit, apply, element, reaction, amp_type, amp_rate, count, aid, mid, defender)
+			util.write_row("DAMAGE", uid, delta, source, attacker, damage, crit, apply, element, reaction, amp_rate, count, aid, mid, defender)
 			return SHOW_PACKETS_ON_FILTER
 		end
 	
@@ -207,7 +217,7 @@ function on_filter(packet)
 			local mid = head:field("instanced_modifier_id"):value():get() or 0
 
 			if apply_id ~= 0 and resolver.id_type(target_id) == "Reaction" then
-				resolver.add_ability(aid, mid, entity_id, apply_id)
+				resolver.add_ability_invoke(aid, mid, entity_id, apply_id)
 			end
 			return SHOW_PACKETS_ON_FILTER
 		end
