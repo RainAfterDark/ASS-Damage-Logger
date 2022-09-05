@@ -57,10 +57,7 @@ function resolver.get_id(id)
 	local type = resolver.id_type(id)
 	
 	if type == "AvatarID" then
-		if SHOULD_RESOLVE_NAMES then
-			return avatar_names[id]
-		end
-		return id
+		return avatar_names[id] or id
 
 	elseif type == "Avatar" then
 		local resolved = resolver.get_id(avatar_ids[id])
@@ -126,10 +123,8 @@ function resolver.get_source(attacker, aid)
 	local type = resolver.id_type(attacker)
 
     if type == "Gadget" then
-		if SHOULD_RESOLVE_NAMES then
-			return "(G) " .. gadget_names[gadget_config_ids[attacker]]
-		end
-        return gadget_config_ids[attacker]
+		local gadget = gadget_names[gadget_config_ids[attacker]] or gadget_config_ids[attacker]
+		return "(G) " .. gadget
 
     elseif type == "Avatar" then
 		if avatar_abilities[attacker][aid] then
@@ -162,10 +157,7 @@ function resolver.get_reaction(aid, element, amp_type)
 end
 
 function resolver.get_skill(id)
-	if SHOULD_RESOLVE_NAMES then
-		return skill_names[id] or id
-	end
-	return id
+	return skill_names[id] or id
 end
 
 function resolver.add_avatar(entity_id, avatar_id)

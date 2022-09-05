@@ -17,10 +17,6 @@ TABLE_FORMAT = true
 --Disable for performance and to save whitespace on logs
 --TO DO: a better frontend log parser with neat graphs and stuff
 
-SHOULD_RESOLVE_NAMES = true
---Option to resolve IDs to readable names
---This applies to avatar, gadget, skill, element, and amp type names
-
 SHOW_PACKETS_ON_FILTER = true
 --Option to show packets in captures window after applying filter
 --Disabling *might* improve performance but I don't think I've seen much of a difference
@@ -164,16 +160,13 @@ function on_filter(packet)
 			local aid = ability:field("instanced_ability_id"):value():get() or 0
 			local mid = ability:field("instanced_modifier_id"):value():get() or 0
 			local reaction = resolver.get_reaction(aid, element, amp_type)
+			element = resolver.get_element(element)
+			amp_type = resolver.get_amp_type(amp_type)
 
 			local attacker = attack:field("attacker_id"):value():get()
 			local source = resolver.get_source(attacker, aid)
 			attacker = resolver.get_attacker(attacker, aid, mid, defender)
 			defender = resolver.id_type(defender) == "Gadget" and resolver.get_source(defender) or resolver.get_id(defender)
-
-			if SHOULD_RESOLVE_NAMES then
-				element = resolver.get_element(element)
-				amp_type = resolver.get_amp_type(amp_type)
-			end
 
 			local timestamp = packet:timestamp()
 			local delta = timestamp - last_time
@@ -246,5 +239,6 @@ function on_filter(packet)
 
 	return false
 end
+
 
 
