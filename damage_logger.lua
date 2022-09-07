@@ -236,36 +236,7 @@ function on_filter(packet)
 				--print("trigger " .. reaction .. " " .. resolver.get_id(trigger) .. 
 				--" / " .. resolver.get_element(source) .. " -> " .. resolver.get_element(reactor))
 			end
-
-			--[[Fuck this entire bullshit good lord
-			if not list:has_field("head") then
-				return SHOW_PACKETS_ON_FILTER
-			end
 			
-			local head = list:field("head"):value():get()
-			local target_id = head:field("target_id"):value():get()
-			local entity_id = list:field("entity_id"):value():get()
-			local apply_id = ability:field("apply_entity_id"):value():get()
-			local action = ability:field("action"):value():get() == 1 and true or false
-
-			local aid = head:field("instanced_ability_id"):value():get()
-			local mid = head:field("instanced_modifier_id"):value():get()
-			local mid_local = ability:field("modifier_local_id"):value():get()
-			
-			--MODIFIER_ACTION_REMOVED
-			if mid and action then
-				resolver.remove_modifier(mid)
-			elseif mid and apply_id ~= 0 then
-				resolver.add_modifier(mid, apply_id)
-			end
-
-			--[[if arg == 1 then
-				print("ModChange " .. aid .. " " .. mid .. " " .. mid_local .. " " .. tostring(action) .. " / " ..
-				resolver.get_id(apply_id) .. " " .. resolver.get_id(entity_id) .. " " .. resolver.get_id(target_id))
-			else
-				print(" SetApply " .. aid .. " " .. mid .. " " .. mid_local .. " " .. tostring(action) .. " / " ..
-				resolver.get_id(apply_id) .. " " .. resolver.get_id(entity_id) .. " " .. resolver.get_id(target_id))
-			end]]
 			return SHOW_PACKETS_ON_FILTER
 		end
 	

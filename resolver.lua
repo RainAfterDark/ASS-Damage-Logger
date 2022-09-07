@@ -237,39 +237,6 @@ function resolver.update_reaction(reaction, id)
 	--print(reaction .. " " .. resolver.get_id(id))
 end
 
---[[ preserving whatever the fuck this was for one commit wow what the hell was i on...
-function resolver.add_modifier(mid, apply_id)
-    --if not modifier_map[mid] then modifier_map[mid] = {} end
-	local type = resolver.id_type(apply_id)
-	if type ~= "Avatar" and type ~= "Gadget" then
-		return
-	end
-    if modifier_ids[mid] then
-		if not mid_replaceable[mid] then
-			return
-		end
-        print("Replace: " .. mid .. 
-        " = oldID: " .. resolver.get_id(modifier_ids[mid]) .. 
-        ", newID: " .. resolver.get_id(apply_id))
-		mid_replaceable[mid] = nil
-	else
-		print("New: " .. mid .. " = " .. resolver.get_id(apply_id))
-	end
-    modifier_ids[mid] = apply_id
-end
-
-function resolver.remove_modifier(mid)
-	if modifier_ids[mid] then
-		mid_replaceable[mid] = true
-		print("Replaceable: " .. mid)
-		return
-	end
-	if modifier_ids[mid] then
-		print("Remove fr: " .. mid .. " = " .. resolver.get_id(modifier_ids[mid]))
-		modifier_ids[mid] = nil
-	end
-end]]
-
 function resolver.reset_ids()
 	for k in pairs(guids) do guids[k] = nil end
     for k in pairs(avatar_ids) do avatar_ids[k] = nil end
