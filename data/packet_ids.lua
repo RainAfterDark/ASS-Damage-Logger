@@ -1,6 +1,7 @@
 local packet_ids = {
     --if these get shuffled oh well
     SceneTeamUpdateNotify = 1775,
+    SceneEntityAppearNotify = 221,
     EvtCreateGadgetNotify = 307,
     UnionCmdNotify = 5,
     CombatInvocationsNotify = 319,

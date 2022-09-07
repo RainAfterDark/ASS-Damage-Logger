@@ -1,10 +1,11 @@
 local resolver = {}
 
 --#region Names
-local gadget_names = require("data.gadget_names")
 local avatar_names = require("data.avatar_names")
-local skill_names = require("data.skill_names")
 local ability_hashes = require("data.ability_hashes")
+local monster_names = require("data.monster_names")
+local gadget_names = require("data.gadget_names")
+local skill_names = require("data.skill_names")
 
 local id_types = {
     [1000] = "AvatarID",
@@ -54,7 +55,7 @@ local base_reaction_dmg = {}
 local last_reaction_dmg = {}
 
 local monster_ids = {}
-local monster_count = 0
+local monster_count = {}
 
 function resolver.id_type(id)
 	return id_types[tonumber(tostring(id):sub(1, 4))] or "Unknown"
@@ -83,10 +84,6 @@ function resolver.get_id(id)
 		return resolved
 
 	elseif type == "Monster" then
-		if not monster_ids[id] then
-            monster_count = monster_count + 1
-			monster_ids[id] = "Monster" .. monster_count
-		end
 		return monster_ids[id]
 
 	elseif type == "Gadget" then
@@ -216,6 +213,15 @@ function resolver.add_ability_hash(avatar_id, aid, hash)
 		end
 		avatar_abilities[avatar_id][aid] = ability_hashes[hash]
 	end
+end
+
+function resolver.add_monster(entity_id, monster_id)
+	local name = monster_names[monster_id] or ("Unknown " .. monster_id)
+	if not monster_count[monster_id] then
+		monster_count[monster_id] = 1
+	end
+	monster_ids[entity_id] = "#" .. monster_count[monster_id] .. " " .. name
+	monster_count[monster_id] = monster_count[monster_id] + 1
 end
 
 function resolver.add_gadget(entity_id, owner_id, config_id)

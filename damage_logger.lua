@@ -3,11 +3,11 @@
 LOG_SKILL_CASTS = false
 --Option to log skill casts (autos also count)
 
-LOG_DAMAGE_TO_AVATAR = false
---Option to log damage dealt to characters
+LOG_ONLY_DAMAGE_TO_MONSTERS = true
+--Option to only log damage to monster type entities
 
 LOG_ZERO_DAMAGE = false
---Option to log damage registered as 0 (happens quite often for some reason)
+--Option to log damage registered as 0 (happens quite often but may be important)
 
 FILE_LOGGING = false
 --Write logs to file, filename will always be 'latest.txt' and will append
@@ -37,6 +37,7 @@ util.init()
 local last_uid = 0
 local last_packets = {
 	SceneTeamUpdateNotify = 0,
+	SceneEntityAppearNotify = 0,
 	CombatInvocationsNotify = 0,
 	AbilityInvocationsNotify = 0,
 	EvtDoSkillSuccNotify = 0
@@ -83,19 +84,44 @@ function on_filter(packet)
 			local block = team_avatar:field("ability_control_block"):value():get()
 			local embryos = block:field("ability_embryo_list"):value():get()
 
-			local offset = -1
+			local got_offset = false
 			for _, a in ipairs(embryos) do
 				local aid = a:get():field("ability_id"):value():get()
 				local hash = a:get():field("ability_name_hash"):value():get()
 				resolver.add_ability_hash(entity_id, aid, hash)
-				if offset == -1 then
-					offset = aid
+				if not got_offset then
 					offsets_text = offsets_text .. aid .. (i == 4 and "" or ", ")
+					got_offset = true
 				end
 			end
 		end
 
 		util.write_header(team_text, offsets_text)
+		return SHOW_PACKETS_ON_FILTER
+	
+	elseif pid == packet_ids.SceneEntityAppearNotify then
+		if first_run then return true end
+		if last_packets.SceneEntityAppearNotify >= uid then
+			return SHOW_PACKETS_ON_FILTER
+		end
+		last_packets.SceneEntityAppearNotify = uid
+
+		local node = packet:content():node()
+		local list = node:field("entity_list"):value():get()
+
+		for _, v in ipairs(list) do
+			local entity = v:get()
+			local entity_id = entity:field("entity_id"):value():get()
+			local type = entity:field("entity_type"):value():get()
+
+			--PROT_ENTITY_TYPE_MONSTER = 2
+			if type == 2 then
+				local info = entity:field("monster"):value():get()
+				local monster_id = info:field("monster_id"):value():get()
+				resolver.add_monster(entity_id, monster_id)
+			end
+		end
+
 		return SHOW_PACKETS_ON_FILTER
 	end
 
@@ -142,7 +168,7 @@ function on_filter(packet)
 			end
 
 			local defender = attack:field("defense_id"):value():get()
-			if not LOG_DAMAGE_TO_AVATAR and resolver.id_type(defender) == "Avatar" then
+			if LOG_ONLY_DAMAGE_TO_MONSTERS and resolver.id_type(defender) ~= "Monster" then
 				return false
 			end
 
