@@ -56,6 +56,32 @@ local function damage_color(damage)
 end
 --#endregion
 
+--#region Time
+function util.convert_time(ms)
+	local msms = ms % (60 * 60 * 1000) --minutes seconds millis
+	local now = os.time() * 1000
+	local hours_ms = now - (now % (60 * 60 * 1000))
+	return hours_ms + msms
+end
+
+function util.format_time(ms)
+	return os.date("%H:%M:%S", math.floor(ms / 1000))
+end
+
+local last_time = 0
+
+function util.delta_time(ms)
+	local delta = ms - last_time
+	if last_time == 0 then delta = 0 end
+	last_time = ms
+	return delta
+end
+
+function util.reset_last_time()
+	last_time = 0
+end
+--#endregion
+
 --#region Output
 function util.log_file(...)
 	if log_file then
@@ -102,25 +128,47 @@ local function write_col(str, len, c, last)
 	else util.write(str, last and "" or ", ") end
 end
 
-function util.write_row(type, uid, delta, source, attacker, damage, crit, apply, element, reaction, amp_rate, count, aid, mid, defender)
+function util.write_row(type, uid, time, delta, source, attacker, 
+	damage, crit, apply, element, reaction, amp_rate, count, aid, mid, defender)
+
 	write_col(type, 6)
 	write_col(uid, 6)
+	write_col(time, 8)
 	write_col(delta, 7)
 	write_col(source, 40)
 	write_col(attacker, 9, theme.avatar[attacker])
+
 	write_col(damage, 15, damage_color(damage))
 	write_col(crit, 5, theme.bool[crit])
 	write_col(apply, 5, theme.bool[apply])
 	write_col(element, 8, theme.element[element])
 	write_col(reaction, 15, reaction ~= "None" and theme.element[element])
 	write_col(amp_rate, 13)
+
 	write_col(count, 2)
 	write_col(aid, 3)
 	write_col(mid, 3)
 	write_col(defender, 40, nil, true)
+
 	util.reset_style()
 	util.write("\n")
 	odd_row = not odd_row
+end
+
+function util.write_header(team_text, offsets_text)
+	if not TABLE_FORMAT then
+		util.write(team_text, "\n")
+		util.write(offsets_text, "\n")
+		return
+	end
+
+	util.color_bg(240)
+	util.write(" ", util.pad(team_text, 216), "\n")
+	util.color_bg(239)
+	util.write(" ", util.pad(offsets_text, 216), "\n")
+	util.reset_style()
+	util.write_row("Type", "UID", "Time", "Delta", "Source (Gadget / Ability)", "Attacker", 
+	"Damage", "Crit", "Apply", "Element", "Reaction", "Amp Rate", "C", "AID", "MID", "Defender")
 end
 --#endregion
 
@@ -130,7 +178,7 @@ function util.init()
 	io.write("\27[4m", gradient.generate(" ASS Damage ", {255, 100, 255}, {100, 255, 255}))
 	io.write(gradient.generate("Logger v" .. GAME_VERSION, {100, 255, 255}, {100, 255, 100}))
 	util.reset_style()
-	io.write(" (beta?) by Ame\n\n")
+	io.write(" by Ame\n\n")
 
 	if FILE_LOGGING then
 		log_file = assert(io.open("latest.txt", "a"))

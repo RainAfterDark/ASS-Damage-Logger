@@ -1,6 +1,6 @@
 --#region Config
 
-LOG_SKILL_CASTS = true
+LOG_SKILL_CASTS = false
 --Option to log skill casts (autos also count)
 
 LOG_DAMAGE_TO_AVATAR = false
@@ -21,6 +21,10 @@ SHOW_PACKETS_ON_FILTER = true
 --Option to show packets in captures window after applying filter
 --Disabling *might* improve performance but I don't think I've seen much of a difference
 
+USE_REACTION_CORRECTION = true
+--EXPERIMENTAL: Might make reaction ownership attribution better or worse
+--TO DO: parser to do post-processing of reaction numbers to replace this
+
 --#endregion
 
 GAME_VERSION = "3.0.0"
@@ -30,7 +34,6 @@ local resolver = require("resolver")
 local util = require("output.util")
 util.init()
 
-local last_time = 0
 local last_uid = 0
 local last_packets = {
 	SceneTeamUpdateNotify = 0,
@@ -50,7 +53,7 @@ function on_filter(packet)
 		first_run = true
 	end
 
-	--Packet is always sent when loading into a new scene / changing teams (even just swapping characters)
+	--Packet is always sent when loading into a new scene / changing teams (even just swapping characters around)
 	if pid == packet_ids.SceneTeamUpdateNotify then
 		if first_run then return true end
 		if last_packets.SceneTeamUpdateNotify >= uid then
@@ -59,40 +62,40 @@ function on_filter(packet)
 		last_packets.SceneTeamUpdateNotify = uid
 
 		resolver.reset_ids()
+		util.reset_last_time()
 
 		local node = packet:content():node()
 		local list = node:field("scene_team_avatar_list"):value():get()
 
-		local team_text = "TEAM, "
-		for k in ipairs(list) do
-			local team_avatar = list[k]:get()
+		local team_text = "TEAM UPDATE: "
+		local offsets_text = "AID OFFSETS: "
+		for i in ipairs(list) do
+			local team_avatar = list[i]:get()
+			local guid = team_avatar:field("avatar_guid"):value():get()
 			local entity_id = team_avatar:field("entity_id"):value():get()
 
 			local entity_info = team_avatar:field("scene_entity_info"):value():get()
 			local avatar_info = entity_info:field("avatar"):value():get()
 			local avatar_id = avatar_info:field("avatar_id"):value():get()
-			resolver.add_avatar(entity_id, avatar_id)
-			team_text = team_text .. resolver.get_id(avatar_id) .. (k == 4 and "" or ", ")
+			resolver.add_avatar(guid, entity_id, avatar_id)
+			team_text = team_text .. resolver.get_id(avatar_id) .. (i == 4 and "" or ", ")
 
 			local block = team_avatar:field("ability_control_block"):value():get()
 			local embryos = block:field("ability_embryo_list"):value():get()
 
+			local offset = -1
 			for _, a in ipairs(embryos) do
 				local aid = a:get():field("ability_id"):value():get()
 				local hash = a:get():field("ability_name_hash"):value():get()
 				resolver.add_ability_hash(entity_id, aid, hash)
+				if offset == -1 then
+					offset = aid
+					offsets_text = offsets_text .. aid .. (i == 4 and "" or ", ")
+				end
 			end
 		end
 
-		if TABLE_FORMAT then
-			util.color_bg(240)
-			util.write(" ", util.pad(team_text, 206), "\n")
-			util.reset_style()
-			util.write_row("Type", "UID", "Delta", "Source (Gadget / Ability)", "Attacker", "Damage", "Crit", "Apply", "Element", "Reaction", "Amp Rate", "C", "AID", "MID", "Defender")
-		else
-			util.write(team_text, "\n")
-		end
-
+		util.write_header(team_text, offsets_text)
 		return SHOW_PACKETS_ON_FILTER
 	end
 
@@ -118,8 +121,7 @@ function on_filter(packet)
 		if last_uid > uid then
 			return false
 		end
-		local list_len = #(packet:content():node():field("cmd_list"):value():get())
-		return list_len > 1
+		return true
 	
 	elseif pid == packet_ids.CombatInvocationsNotify then
 		local node = packet:content():node()
@@ -151,29 +153,28 @@ function on_filter(packet)
 
 			local crit = attack:field("is_crit"):value():get()
 			local apply = resolver.get_apply(attack:field("element_durability_attenuation"):value():get())
-			local element = attack:field("element_type"):value():get()
-			local amp_type = attack:field("amplify_reaction_type"):value():get()
+			local element = resolver.get_element(attack:field("element_type"):value():get())
+			local amp_type = resolver.get_amp_type(attack:field("amplify_reaction_type"):value():get())
 			local amp_rate = attack:field("element_amplify_rate"):value():get()
 			local count = attack:field("attack_count"):value():get()
 
 			local ability = attack:field("ability_identifier"):value():get()
-			local aid = ability:field("instanced_ability_id"):value():get() or 0
-			local mid = ability:field("instanced_modifier_id"):value():get() or 0
+			local aid = ability:field("instanced_ability_id"):value():get()
+			local mid = ability:field("instanced_modifier_id"):value():get()
+			local caster = ability:field("ability_caster_id"):value():get()
 			local reaction = resolver.get_reaction(aid, element, amp_type)
-			element = resolver.get_element(element)
-			amp_type = resolver.get_amp_type(amp_type)
 
 			local attacker = attack:field("attacker_id"):value():get()
-			local source = resolver.get_source(attacker, aid)
-			attacker = resolver.get_attacker(attacker, aid, mid, defender)
+			local source = resolver.get_source(attacker, aid, element, defender)
+			attacker = resolver.get_attacker(attacker, caster, aid, damage, defender)
 			defender = resolver.id_type(defender) == "Gadget" and resolver.get_source(defender) or resolver.get_id(defender)
 
-			local timestamp = packet:timestamp()
-			local delta = timestamp - last_time
-			if last_time == 0 then delta = 0 end
-			last_time = timestamp
+			local timestamp = util.convert_time(attack:field("attack_timestamp_ms"):value():get())
+			local time = util.format_time(timestamp)
+			local delta = util.delta_time(timestamp)
 			
-			util.write_row("DAMAGE", uid, delta, source, attacker, damage, crit, apply, element, reaction, amp_rate, count, aid, mid, defender)
+			util.write_row("DAMAGE", uid, time, delta, source, attacker, 
+			damage, crit, apply, element, reaction, amp_rate, count, aid, mid, defender)
 			return SHOW_PACKETS_ON_FILTER
 		end
 	
@@ -182,38 +183,63 @@ function on_filter(packet)
 		local list = node:field("invokes"):value():get()[1]:get()
 		local arg = list:field("argument_type"):value():get()
 
-		--[[local exceptions = {0, 7, 8, 11, 16, 18, 100, 104, 105, 106, 107}
-		for _, v in ipairs(exceptions) do
-			if arg == v then
-				return false
-			end
-		end]]
-
-		--ABILITY_INVOKE_ARGUMENT_META_MODIFIER_CHANGE
-		if arg ~= 1 or not list:has_field("head") then return false end
+		--ABILITY_INVOKE_ARGUMENT_META_UPDATE_BASE_REACTION_DAMAGE = 19
+		--ABILITY_INVOKE_ARGUMENT_META_TRIGGER_ELEMENT_REACTION = 20
+		if arg ~= 19 and arg ~= 20 then return false end
 		if first_run then return true end
 
 		if list:has_field("ability_data_unpacked") then
 
 			local ability = list:field("ability_data_unpacked"):value():get()
-			if not ability:has_field("apply_entity_id") then return false end
 
 			if last_packets.AbilityInvocationsNotify >= uid then
 				return SHOW_PACKETS_ON_FILTER
 			end
 			last_packets.AbilityInvocationsNotify = uid
+
+			if arg == 19 then
+				local reaction = ability:field("reaction_type"):value():get()
+				local caster = ability:field("source_caster_id"):value():get()
+				resolver.update_reaction(reaction, caster)
+			else
+				local reaction = ability:field("element_reaction_type"):value():get()
+				local trigger = ability:field("trigger_entity_id"):value():get()
+				--local source = ability:field("element_source_type"):value():get()
+				--local reactor = ability:field("element_reactor_type"):value():get()
+				resolver.update_reaction(reaction, trigger)
+				--print("trigger " .. reaction .. " " .. resolver.get_id(trigger) .. 
+				--" / " .. resolver.get_element(source) .. " -> " .. resolver.get_element(reactor))
+			end
+
+			--[[Fuck this entire bullshit good lord
+			if not list:has_field("head") then
+				return SHOW_PACKETS_ON_FILTER
+			end
 			
 			local head = list:field("head"):value():get()
 			local target_id = head:field("target_id"):value():get()
 			local entity_id = list:field("entity_id"):value():get()
 			local apply_id = ability:field("apply_entity_id"):value():get()
+			local action = ability:field("action"):value():get() == 1 and true or false
 
-			local aid = head:field("instanced_ability_id"):value():get() or 0
-			local mid = head:field("instanced_modifier_id"):value():get() or 0
-
-			if apply_id ~= 0 and resolver.id_type(target_id) == "Reaction" then
-				resolver.add_ability_invoke(aid, mid, entity_id, apply_id)
+			local aid = head:field("instanced_ability_id"):value():get()
+			local mid = head:field("instanced_modifier_id"):value():get()
+			local mid_local = ability:field("modifier_local_id"):value():get()
+			
+			--MODIFIER_ACTION_REMOVED
+			if mid and action then
+				resolver.remove_modifier(mid)
+			elseif mid and apply_id ~= 0 then
+				resolver.add_modifier(mid, apply_id)
 			end
+
+			--[[if arg == 1 then
+				print("ModChange " .. aid .. " " .. mid .. " " .. mid_local .. " " .. tostring(action) .. " / " ..
+				resolver.get_id(apply_id) .. " " .. resolver.get_id(entity_id) .. " " .. resolver.get_id(target_id))
+			else
+				print(" SetApply " .. aid .. " " .. mid .. " " .. mid_local .. " " .. tostring(action) .. " / " ..
+				resolver.get_id(apply_id) .. " " .. resolver.get_id(entity_id) .. " " .. resolver.get_id(target_id))
+			end]]
 			return SHOW_PACKETS_ON_FILTER
 		end
 	
@@ -225,20 +251,20 @@ function on_filter(packet)
 		end
 		last_packets.EvtDoSkillSuccNotify = uid
 
-		local timestamp = packet:timestamp()
-		local delta = timestamp - last_time
-		if last_time == 0 then delta = 0 end
-		last_time = timestamp
-
 		local node = packet:content():node()
 		local caster = resolver.get_id(node:field("caster_id"):value():get())
 		local skill = resolver.get_skill(node:field("skill_id"):value():get())
 
-		util.write_row("SKILL", uid, delta, skill, caster)
+		--[[local timestamp = util.convert_time(packet:timestamp())
+		local time = util.format_time(timestamp)
+		local delta = util.delta_time(timestamp)]]
+
+		util.write_row("SKILL", uid, nil, nil, skill, caster)
 	end
 
 	return false
 end
+
 
 
 
