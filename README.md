@@ -3,17 +3,17 @@ Proof-of-concept packet damage logger for anime game with Akebi-Sniffer-Scriptin
 
 ## Usage
 - Setting up Akebi and Sniffer
-  - Build/get latest actions from [Akebi](https://github.com/Akebi-Group/Akebi-GC)
-  - (until my Akebi-Sniffer PR gets accepted) Build my fork of [Akebi-Sniffer](https://github.com/RainAfterDark/Akebi-PacketSniffer) (or download a release when I get to it)
-  - There should be a tutorial on how to setup the sniffer over there, but for protos, you can get [Sorapointa's](https://github.com/Sorapointa/Sorapointa-Protos)
+  - Build [Akebi](https://github.com/Akebi-Group/Akebi-GC) or get the latest artifact from their [actions](https://github.com/Akebi-Group/Akebi-GC/actions).
+  - Build my fork of [Akebi-Sniffer](https://github.com/RainAfterDark/Akebi-PacketSniffer) or download my [unofficial release](https://github.com/RainAfterDark/Akebi-PacketSniffer/releases/tag/Unofficial). (until my [PR](https://github.com/Akebi-Group/Akebi-PacketSniffer/pull/10) gets merged)
+  - There should be a tutorial on how to setup the sniffer over there, but for protos, you can get [Sorapointa's](https://github.com/Sorapointa/Sorapointa-Protos).
   - After injecting the game with Akebi, open the menu, go to settings, and all the way down, turn on "Capturing".
-  - Open up the sniffer, set-up your protos and load the script `damage-logger.lua`
+  - Open up the sniffer, set-up your protos and load the script `damage_logger.lua`.
   
 - Using the script
   - I've made the script work specifically with packet level filter **ENABLED** to save memory, since we don't need every packet getting saved.
   - I recommend that you first disconnect the pipe in settings while preparing to log a rotation, and clearing packets (right click any packet in the capture window and a context menu should open).
   - Whenever you're ready, make sure that you connect the pipe again **BEFORE** changing scenes or swapping teams. This is to capture the packet telling the server the characters you're using, which the script needs.
-  - Do stuff once you're connected
+  - Do stuff once you're connected.
   - To actually "log" the damage, you can disconnect the pipe again now (to save memory). If you see packets are still flooding, check the packet queue size on the menu bar.
   - Once the queue size is 0, now you have to **DISABLE** packet level filter and then hit apply to generate logs.
   - From here you can clear your saved packets again to save memory and do it over again. Remember to turn packet level filter back **ON**.
