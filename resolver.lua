@@ -56,6 +56,8 @@ local last_reaction_dmg = {}
 
 local monster_ids = {}
 local monster_count = {}
+local monster_affix = {}
+local monster_letter = 0
 
 function resolver.id_type(id)
 	return id_types[tonumber(tostring(id):sub(1, 4))] or "Unknown"
@@ -218,9 +220,17 @@ end
 function resolver.add_monster(entity_id, monster_id)
 	local name = monster_names[monster_id] or ("Unknown " .. monster_id)
 	if not monster_count[monster_id] then
+		local affix = ""
+		for _ = 1, math.floor(monster_letter / 26) do
+			affix = affix .. "Z"
+		end
+		affix = affix .. string.char(65 + (monster_letter % 26))
+		monster_letter = monster_letter + 1
+		monster_affix[monster_id] = affix
 		monster_count[monster_id] = 1
 	end
-	monster_ids[entity_id] = "#" .. monster_count[monster_id] .. " " .. name
+
+	monster_ids[entity_id] = monster_affix[monster_id] .. monster_count[monster_id] .. " " .. name
 	monster_count[monster_id] = monster_count[monster_id] + 1
 end
 
