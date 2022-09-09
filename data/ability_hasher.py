@@ -21,6 +21,8 @@ def add_hash(name):
         print(f"dupe conflict! {hash[name]} against {name}") # never occurs thankfully
     hashes[hash] = name
 
+# tbh a lot of these are redundant but i just want to hash as much as I can so we're covering everything
+
 defaults = ["Default", "Avatar_DefaultAbility_VisionReplaceDieInvincible", "Avatar_DefaultAbility_AvartarInShaderChange", "Avatar_SprintBS_Invincible",
         "Avatar_Freeze_Duration_Reducer", "Avatar_Attack_ReviveEnergy", "Avatar_Component_Initializer", "Avatar_FallAnthem_Achievement_Listener"]
 
@@ -73,10 +75,18 @@ for i in avatar_list:
 
     f.close()
 
+f_abilitypath = open(path / "AbilityPathData.json")
+ability_data = json.load(f_abilitypath)
+f_abilitypath.close()
+
+for _, v in ability_data["abilityPaths"].items():
+    for ability in v:
+        add_hash(ability)
+
 f_lua = open(path / "ability_hashes.lua", "w")
 f_lua.write("local ability_hashes = {\n")
 
-for k, v in hashes.items():
+for k, v in sorted(hashes.items(), key=lambda x:x[1]):
     f_lua.write(f'\t[{k}] = "{v}",\n')
 
 f_lua.write("}\nreturn ability_hashes")
