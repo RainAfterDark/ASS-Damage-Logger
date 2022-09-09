@@ -188,7 +188,7 @@ function on_filter(packet)
 			local aid = ability:field("instanced_ability_id"):value():get()
 			local mid = ability:field("instanced_modifier_id"):value():get()
 			local caster = ability:field("ability_caster_id"):value():get()
-			local reaction = resolver.get_reaction(aid, element, amp_type)
+			local reaction = resolver.get_reaction(aid, element)
 
 			local attacker = attack:field("attacker_id"):value():get()
 			local source = resolver.get_source(attacker, aid, element, defender)
@@ -200,7 +200,7 @@ function on_filter(packet)
 			local delta = util.delta_time(timestamp)
 			
 			util.write_row("DAMAGE", uid, time, delta, source, attacker, 
-			damage, crit, apply, element, reaction, amp_rate, count, aid, mid, defender)
+			damage, crit, apply, element, reaction, amp_type, amp_rate, count, aid, mid, defender)
 			return SHOW_PACKETS_ON_FILTER
 		end
 	
@@ -216,23 +216,26 @@ function on_filter(packet)
 
 		if list:has_field("ability_data_unpacked") then
 
-			local ability = list:field("ability_data_unpacked"):value():get()
-
 			if last_packets.AbilityInvocationsNotify >= uid then
 				return SHOW_PACKETS_ON_FILTER
 			end
 			last_packets.AbilityInvocationsNotify = uid
 
+			local entity_id = list:field("entity_id"):value():get() or 0
+			local ability = list:field("ability_data_unpacked"):value():get()
+
 			if arg == 19 then
 				local reaction = ability:field("reaction_type"):value():get()
 				local caster = ability:field("source_caster_id"):value():get()
-				resolver.update_reaction(reaction, caster)
+				--print("BaseDmg: " .. reaction .. " " .. resolver.get_id(caster) .. " " ..  resolver.get_id(entity_id))
+				resolver.update_reaction(reaction, caster, entity_id)
 			else
 				local reaction = ability:field("element_reaction_type"):value():get()
 				local trigger = ability:field("trigger_entity_id"):value():get()
 				--local source = ability:field("element_source_type"):value():get()
 				--local reactor = ability:field("element_reactor_type"):value():get()
-				resolver.update_reaction(reaction, trigger)
+				--print("BaseDmg: " .. reaction .. " " .. resolver.get_id(trigger) .. " " ..  resolver.get_id(entity_id))
+				resolver.update_reaction(reaction, trigger, entity_id)
 				--print("trigger " .. reaction .. " " .. resolver.get_id(trigger) .. 
 				--" / " .. resolver.get_element(source) .. " -> " .. resolver.get_element(reactor))
 			end

@@ -143,9 +143,9 @@ function resolver.get_attacker(attacker, caster, aid, damage, defender)
 		end
 
 		local dmg_table = last_reaction_dmg[aid][candidate]
-		if damage > dmg_table[#dmg_table] then
+		--if damage > dmg_table[#dmg_table] then --there are instances where this condition might be useful or does nothing
 			table.insert(dmg_table, damage)
-		end
+		--end
 
 		return candidate
 	end
@@ -177,9 +177,6 @@ function resolver.get_source(attacker, aid, element, defender)
 end
 
 function resolver.get_reaction(aid, element, amp_type)
-
-	if amp_type ~= "None" then return amp_type end
-
 	local reaction = reaction_names[aid]
 	if reaction then
         if(reaction == "Burning" and element ~= "Pyro") or
@@ -239,12 +236,11 @@ function resolver.add_gadget(entity_id, owner_id, config_id)
     gadget_config_ids[entity_id] = config_id
 end
 
-function resolver.update_reaction(reaction, id)
-	if resolver.id_type(id) == "Monster" then
+function resolver.update_reaction(reaction, source_id, entity_id)
+	if resolver.id_type(source_id) == "Monster" then
 		return
 	end
-	base_reaction_dmg[reaction] = id
-	--print(reaction .. " " .. resolver.get_id(id))
+	base_reaction_dmg[reaction] = source_id
 end
 
 function resolver.reset_ids()

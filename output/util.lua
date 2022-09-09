@@ -129,7 +129,7 @@ local function write_col(str, len, c, last)
 end
 
 function util.write_row(type, uid, time, delta, source, attacker, 
-	damage, crit, apply, element, reaction, amp_rate, count, aid, mid, defender)
+	damage, crit, apply, element, reaction, amp_type, amp_rate, count, aid, mid, defender)
 
 	write_col(type, 6)
 	write_col(uid, 6)
@@ -143,6 +143,7 @@ function util.write_row(type, uid, time, delta, source, attacker,
 	write_col(apply, 5, theme.bool[apply])
 	write_col(element, 8, theme.element[element])
 	write_col(reaction, 15, reaction ~= "None" and theme.element[element])
+	write_col(amp_type, 9, amp_type ~= "None" and theme.element[element])
 	write_col(amp_rate, 13)
 
 	write_col(count, 2)
@@ -163,12 +164,12 @@ function util.write_header(team_text, offsets_text)
 	end
 
 	util.color_bg(240)
-	util.write(" ", util.pad(team_text, 216), "\n")
+	util.write(" ", util.pad(team_text, 227), "\n")
 	util.color_bg(239)
-	util.write(" ", util.pad(offsets_text, 216), "\n")
+	util.write(" ", util.pad(offsets_text, 227), "\n")
 	util.reset_style()
 	util.write_row("Type", "UID", "Time", "Delta", "Source (Gadget / Ability)", "Attacker", 
-	"Damage", "Crit", "Apply", "Element", "Reaction", "Amp Rate", "C", "AID", "MID", "Defender")
+	"Damage", "Crit", "Apply", "Element", "Reaction", "Amp Type", "Amp Rate", "C", "AID", "MID", "Defender")
 end
 --#endregion
 
