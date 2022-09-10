@@ -182,7 +182,7 @@ function util.init()
 	io.write(" by Ame\n\n")
 
 	if FILE_LOGGING then
-		log_file = assert(io.open("latest.txt", "a"))
+		log_file = assert(io.open("latest.txt", FILE_OPEN_MODE))
 	end
 end
 

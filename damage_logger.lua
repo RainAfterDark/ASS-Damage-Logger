@@ -9,21 +9,24 @@ LOG_ONLY_DAMAGE_TO_MONSTERS = true
 LOG_ZERO_DAMAGE = false
 --Option to log damage registered as 0 (happens quite often but may be important)
 
-FILE_LOGGING = false
---Write logs to file, filename will always be 'latest.txt' and will append
+FILE_LOGGING = true
+--Write logs to file, filename will always be 'latest.txt'
 
-TABLE_FORMAT = true
+FILE_OPEN_MODE = "w"
+--"a" to append, "w" to overwrite
+
+TABLE_FORMAT = false
 --Option to have logs be neatly formatted with uniform spacing (and colors!)
---Disable for performance and to save whitespace on logs
+--Disable for performance and to save whitespace on logs (and to use the py parser)
 --TO DO: a better frontend log parser with neat graphs and stuff
 
 SHOW_PACKETS_ON_FILTER = true
 --Option to show packets in captures window after applying filter
 --Disabling *might* improve performance but I don't think I've seen much of a difference
 
-USE_REACTION_CORRECTION = true
+USE_REACTION_CORRECTION = false
 --EXPERIMENTAL: Might make reaction ownership attribution better or worse
---TO DO: parser to do post-processing of reaction numbers to replace this
+--Should no longer be used! See damage_parser.py for a better reaction source corrector
 
 --#endregion
 
@@ -79,7 +82,7 @@ function on_filter(packet)
 			local avatar_info = entity_info:field("avatar"):value():get()
 			local avatar_id = avatar_info:field("avatar_id"):value():get()
 			resolver.add_avatar(guid, entity_id, avatar_id)
-			team_text = team_text .. resolver.get_id(avatar_id) .. (i == 4 and "" or ", ")
+			team_text = team_text .. resolver.get_id(avatar_id) .. (i == #list and "" or ", ")
 
 			local block = team_avatar:field("ability_control_block"):value():get()
 			local embryos = block:field("ability_embryo_list"):value():get()
@@ -90,7 +93,7 @@ function on_filter(packet)
 				local hash = a:get():field("ability_name_hash"):value():get()
 				resolver.add_ability_hash(entity_id, aid, hash)
 				if not got_offset then
-					offsets_text = offsets_text .. aid .. (i == 4 and "" or ", ")
+					offsets_text = offsets_text .. aid .. (i == #list and "" or ", ")
 					got_offset = true
 				end
 			end
@@ -191,11 +194,12 @@ function on_filter(packet)
 			local reaction = resolver.get_reaction(aid, element)
 
 			local attacker = attack:field("attacker_id"):value():get()
-			local source = resolver.get_source(attacker, aid, element, defender)
+			local source = resolver.get_source(attacker, caster, aid, element, defender)
 			attacker = resolver.get_attacker(attacker, caster, aid, damage, defender)
 			defender = resolver.id_type(defender) == "Gadget" and resolver.get_source(defender) or resolver.get_id(defender)
 
-			local timestamp = util.convert_time(attack:field("attack_timestamp_ms"):value():get())
+			--local timestamp = util.convert_time(attack:field("attack_timestamp_ms"):value():get())
+			local timestamp = packet:timestamp()
 			local time = util.format_time(timestamp)
 			local delta = util.delta_time(timestamp)
 			
@@ -234,9 +238,8 @@ function on_filter(packet)
 				local trigger = ability:field("trigger_entity_id"):value():get()
 				--local source = ability:field("element_source_type"):value():get()
 				--local reactor = ability:field("element_reactor_type"):value():get()
-				--print("BaseDmg: " .. reaction .. " " .. resolver.get_id(trigger) .. " " ..  resolver.get_id(entity_id))
+				--print("Trigger: " .. reaction .. " " .. resolver.get_id(trigger) .. " " ..  resolver.get_id(entity_id))
 				resolver.update_reaction(reaction, trigger, entity_id)
-				--print("trigger " .. reaction .. " " .. resolver.get_id(trigger) .. 
 				--" / " .. resolver.get_element(source) .. " -> " .. resolver.get_element(reactor))
 			end
 			
@@ -255,15 +258,16 @@ function on_filter(packet)
 		local caster = resolver.get_id(node:field("caster_id"):value():get())
 		local skill = resolver.get_skill(node:field("skill_id"):value():get())
 
-		--[[local timestamp = util.convert_time(packet:timestamp())
+		local timestamp = packet:timestamp()
 		local time = util.format_time(timestamp)
-		local delta = util.delta_time(timestamp)]]
+		local delta = util.delta_time(timestamp)
 
-		util.write_row("SKILL", uid, nil, nil, skill, caster)
+		util.write_row("SKILL", uid, time, delta, skill, caster)
 	end
 
 	return false
 end
+
 
 
 

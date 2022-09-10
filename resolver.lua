@@ -152,8 +152,12 @@ function resolver.get_attacker(attacker, caster, aid, damage, defender)
 	return resolver.get_id(attacker)
 end
 
-function resolver.get_source(attacker, aid, element, defender)
+function resolver.get_source(attacker, caster, aid, element, defender)
 	local type = resolver.id_type(attacker)
+
+	if type == "Reaction" or resolver.id_type(caster) == "Reaction" then
+		return "Reaction"
+	end
 
 	if attacker == defender then
 		if element == "Physical" then
@@ -237,7 +241,7 @@ function resolver.add_gadget(entity_id, owner_id, config_id)
 end
 
 function resolver.update_reaction(reaction, source_id, entity_id)
-	if resolver.id_type(source_id) == "Monster" then
+	if resolver.id_type(entity_id) ~= "Monster" then
 		return
 	end
 	base_reaction_dmg[reaction] = source_id
