@@ -33,7 +33,6 @@ for i in monster_data:
             describe_hash = str(describe_names[describe_id])
             if describe_hash in textmap_data:
                 f_lua.write(f'\t[{id}] = "{textmap_data[describe_hash]}",\n')
-                print(textmap_data[describe_hash])
                 continue
     
     name_hash = str(i["nameTextMapHash"])

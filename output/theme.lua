@@ -50,6 +50,7 @@ local theme = {
         ["Yae Miko"] = 218,
         ["Shinobu"] = 146,
         ["Dori"] = 211,
+        ["Cyno"] = 182,
         --Hydro
         ["Barbara"] = 117,
         ["Xingqiu"] = 38,
@@ -58,6 +59,8 @@ local theme = {
         ["Kokomi"] = 153,
         ["Yelan"] = 75,
         ["Ayato"] = 45,
+        ["Nilou"] = 74,
+        ["Candace"] = 116,
         --Cryo
         ["Ayaka"] = 123,
         ["Kaeya"] = 189,
