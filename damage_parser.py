@@ -9,8 +9,7 @@ class col(Enum):
 
 path = Path(__file__).parent
 
-# log must NOT use table format! this script is just a quick little parser anyways
-# also only works with one team at a time, log files with multiple teams and rotations will be combined together
+# only works with one team at a time, log files with multiple teams and rotations will be combined together
 log_file = open(path / "../../latest.txt")
 
 occurence_table = {}
@@ -114,10 +113,11 @@ for avatar, stats in damage_table.items():
         if stat == "Total": continue
         if stat == "Crit" or stat == "Apply":
             rate = 0
-            total_hits = val["true"] + val["false"]
+            hits = val["true"]
+            total_hits = hits + val["false"]
             if total_hits > 0:
                 rate = (val["true"] / total_hits) * 100
-            print(f"\t{stat} Rate: {round(rate, 2)}%")
+            print(f"\t{stat} Rate: {hits}/{total_hits} ({round(rate, 2)}%)")
             continue
         print(f"\t{stat}: {round(val):,}")
 

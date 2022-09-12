@@ -84,48 +84,36 @@ end
 
 --#region Output
 function util.log_file(...)
-	if log_file then
+	if FILE_LOGGING and log_file then
 		log_file:write(...)
 		log_file:flush()
 	end
 end
 
-function util.write(...)
+function util.write_and_log(...)
 	io.write(...)
-	if FILE_LOGGING then
-		util.log_file(...)
-	end
-end
-
-function util.write_line(len)
-	if not TABLE_FORMAT then
-		return
-	end
-	local line = ""
-	while line:len() < len do
-		line = line .. "-"
-	end
-	util.write(line, "\n")
+	util.log_file(...)
 end
 
 local odd_row = true
 local odd_col = true
+local dont_log_row = false
 
 local function write_col(str, len, c, last)
-	if str == nil then
-		if not TABLE_FORMAT then return end
+	if str ~= nil then
+		str = tostring(str)
+		if not dont_log_row then
+			util.log_file(str, last and "" or ", ")
+		end
+	else
 		str = "-"
 	end
-	str = tostring(str)
 
-	if TABLE_FORMAT then
-		if c then util.color_fg(c) end
-		util.color_bg(theme.col[odd_row][odd_col])
-		util.write(" ", util.pad(str, len), " ")
-		util.reset_style()
-		odd_col = last and true or not odd_col
-
-	else util.write(str, last and "" or ", ") end
+	if c then util.color_fg(c) end
+	util.color_bg(theme.col[odd_row][odd_col])
+	io.write(" ", util.pad(str, len), " ")
+	util.reset_style()
+	odd_col = not odd_col
 end
 
 function util.write_row(type, uid, time, delta, source, attacker, 
@@ -136,7 +124,7 @@ function util.write_row(type, uid, time, delta, source, attacker,
 	write_col(time, 8)
 	write_col(delta, 7)
 	write_col(source, 40)
-	write_col(attacker, 9, theme.avatar[attacker])
+	write_col(attacker, 9, theme.avatar[attacker], type == "SKILL")
 
 	write_col(damage, 15, damage_color(damage))
 	write_col(crit, 5, theme.bool[crit])
@@ -149,27 +137,29 @@ function util.write_row(type, uid, time, delta, source, attacker,
 	write_col(count, 2)
 	write_col(aid, 3)
 	write_col(mid, 3)
-	write_col(defender, 40, nil, true)
+	write_col(defender, 40, theme.avatar[defender], true)
 
 	util.reset_style()
-	util.write("\n")
+	odd_col = true
 	odd_row = not odd_row
+
+	io.write("\n")
+	if not dont_log_row then
+		util.log_file("\n")
+	end
 end
 
 function util.write_header(team_text, offsets_text)
-	if not TABLE_FORMAT then
-		util.write(team_text, "\n")
-		util.write(offsets_text, "\n")
-		return
-	end
-
+	util.log_file(team_text, "\n")
 	util.color_bg(240)
-	util.write(" ", util.pad(team_text, 227), "\n")
+	io.write(" ", util.pad(team_text, 227), "\n")
 	util.color_bg(239)
-	util.write(" ", util.pad(offsets_text, 227), "\n")
+	io.write(" ", util.pad(offsets_text, 227), "\n")
 	util.reset_style()
+	dont_log_row = true
 	util.write_row("Type", "UID", "Time", "Delta", "Source (Gadget / Ability)", "Attacker", 
 	"Damage", "Crit", "Apply", "Element", "Reaction", "Amp Type", "Amp Rate", "C", "AID", "MID", "Defender")
+	dont_log_row = false
 end
 --#endregion
 

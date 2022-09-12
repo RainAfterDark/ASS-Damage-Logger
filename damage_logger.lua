@@ -15,11 +15,6 @@ FILE_LOGGING = true
 FILE_OPEN_MODE = "w"
 --"a" to append, "w" to overwrite
 
-TABLE_FORMAT = false
---Option to have logs be neatly formatted with uniform spacing (and colors!)
---Disable for performance and to save whitespace on logs (and to use the py parser)
---TO DO: a better frontend log parser with neat graphs and stuff
-
 SHOW_PACKETS_ON_FILTER = true
 --Option to show packets in captures window after applying filter
 --Disabling *might* improve performance but I don't think I've seen much of a difference
@@ -82,7 +77,7 @@ function on_filter(packet)
 			local avatar_info = entity_info:field("avatar"):value():get()
 			local avatar_id = avatar_info:field("avatar_id"):value():get()
 			resolver.add_avatar(guid, entity_id, avatar_id)
-			team_text = team_text .. resolver.get_id(avatar_id) .. (i == #list and "" or ", ")
+			team_text = team_text .. resolver.get_root(avatar_id) .. (i == #list and "" or ", ")
 
 			local block = team_avatar:field("ability_control_block"):value():get()
 			local embryos = block:field("ability_embryo_list"):value():get()
@@ -196,7 +191,7 @@ function on_filter(packet)
 			local attacker = attack:field("attacker_id"):value():get()
 			local source = resolver.get_source(attacker, caster, aid, element, defender)
 			attacker = resolver.get_attacker(attacker, caster, aid, damage, defender)
-			defender = resolver.id_type(defender) == "Gadget" and resolver.get_source(defender) or resolver.get_id(defender)
+			defender = resolver.id_type(defender) == "Gadget" and resolver.get_source(defender) or resolver.get_root(defender)
 
 			--local timestamp = util.convert_time(attack:field("attack_timestamp_ms"):value():get())
 			local timestamp = packet:timestamp()
@@ -215,7 +210,9 @@ function on_filter(packet)
 
 		--ABILITY_INVOKE_ARGUMENT_META_UPDATE_BASE_REACTION_DAMAGE = 19
 		--ABILITY_INVOKE_ARGUMENT_META_TRIGGER_ELEMENT_REACTION = 20
-		if arg ~= 19 and arg ~= 20 then return false end
+		if arg ~= 19 
+		--and arg ~= 20 
+		then return false end
 		if first_run then return true end
 
 		if list:has_field("ability_data_unpacked") then
@@ -228,20 +225,20 @@ function on_filter(packet)
 			local entity_id = list:field("entity_id"):value():get() or 0
 			local ability = list:field("ability_data_unpacked"):value():get()
 
-			if arg == 19 then
+			--if arg == 19 then
 				local reaction = ability:field("reaction_type"):value():get()
 				local caster = ability:field("source_caster_id"):value():get()
 				--print("BaseDmg: " .. reaction .. " " .. resolver.get_id(caster) .. " " ..  resolver.get_id(entity_id))
 				resolver.update_reaction(reaction, caster, entity_id)
-			else
-				local reaction = ability:field("element_reaction_type"):value():get()
-				local trigger = ability:field("trigger_entity_id"):value():get()
+			--else
+				--local reaction = ability:field("element_reaction_type"):value():get()
+				--local trigger = ability:field("trigger_entity_id"):value():get()
 				--local source = ability:field("element_source_type"):value():get()
 				--local reactor = ability:field("element_reactor_type"):value():get()
 				--print("Trigger: " .. reaction .. " " .. resolver.get_id(trigger) .. " " ..  resolver.get_id(entity_id))
-				resolver.update_reaction(reaction, trigger, entity_id)
 				--" / " .. resolver.get_element(source) .. " -> " .. resolver.get_element(reactor))
-			end
+				--resolver.update_reaction(reaction, trigger, entity_id)
+			--end
 			
 			return SHOW_PACKETS_ON_FILTER
 		end
@@ -255,7 +252,7 @@ function on_filter(packet)
 		last_packets.EvtDoSkillSuccNotify = uid
 
 		local node = packet:content():node()
-		local caster = resolver.get_id(node:field("caster_id"):value():get())
+		local caster = resolver.get_root(node:field("caster_id"):value():get())
 		local skill = resolver.get_skill(node:field("skill_id"):value():get())
 
 		local timestamp = packet:timestamp()

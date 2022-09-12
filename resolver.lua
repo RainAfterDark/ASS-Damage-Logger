@@ -63,19 +63,19 @@ function resolver.id_type(id)
 	return id_types[tonumber(tostring(id):sub(1, 4))] or "Unknown"
 end
 
-function resolver.get_id(id)
+function resolver.get_root(id)
 	id = tonumber(id)
 	local type = resolver.id_type(id)
 
 	if type == "GUID" then
-		local resolved = resolver.get_id(guids[id])
+		local resolved = resolver.get_root(guids[id])
 		return resolved
 	
 	elseif type == "AvatarID" then
 		return avatar_names[id] or id
 
 	elseif type == "Avatar" then
-		local resolved = resolver.get_id(avatar_ids[id])
+		local resolved = resolver.get_root(avatar_ids[id])
 		if not resolved then
 			if not unresolved_ids[id] then
 				io.write("Warning: cannot resolve ID for ", id, ", please make sure you've captured SceneTeamUpdateNotify (change scene/team)\n")
@@ -86,10 +86,18 @@ function resolver.get_id(id)
 		return resolved
 
 	elseif type == "Monster" then
-		return monster_ids[id]
+		local resolved = monster_ids[id]
+		if not resolved then
+			if not unresolved_ids[id] then
+				io.write("Warning: cannot resolve ID for ", id, ", SceneEntityAppearNotify for this monster must not have been captured\n")
+				unresolved_ids[id] = true
+			end
+			return id
+		end
+		return resolved
 
 	elseif type == "Gadget" then
-		local resolved = resolver.get_id(gadget_owner_ids[id])
+		local resolved = resolver.get_root(gadget_owner_ids[id])
 		return resolved
 	
 	elseif type == "World" or type == "Team" then
@@ -119,7 +127,7 @@ end
 function resolver.get_attacker(attacker, caster, aid, damage, defender)
 	if resolver.id_type(attacker) == "Reaction" or resolver.id_type(caster) == "Reaction" then
 
-		local candidate = resolver.get_id(base_reaction_dmg[base_reaction_ids[reaction_names[aid]]])
+		local candidate = resolver.get_root(base_reaction_dmg[base_reaction_ids[reaction_names[aid]]])
 		if not USE_REACTION_CORRECTION or damage == 0 then
 			return candidate
 		end
@@ -149,7 +157,7 @@ function resolver.get_attacker(attacker, caster, aid, damage, defender)
 
 		return candidate
 	end
-	return resolver.get_id(attacker)
+	return resolver.get_root(attacker)
 end
 
 function resolver.get_source(attacker, caster, aid, element, defender)
@@ -180,7 +188,7 @@ function resolver.get_source(attacker, caster, aid, element, defender)
 	return type
 end
 
-function resolver.get_reaction(aid, element, amp_type)
+function resolver.get_reaction(aid, element)
 	local reaction = reaction_names[aid]
 	if reaction then
         if(reaction == "Burning" and element ~= "Pyro") or
