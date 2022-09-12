@@ -70,6 +70,10 @@ function on_filter(packet)
 		local offsets_text = "AID OFFSETS: "
 		for i in ipairs(list) do
 			local team_avatar = list[i]:get()
+			local block = team_avatar:field("ability_control_block"):value():get()
+			local embryos = block:field("ability_embryo_list"):value():get()
+			if #embryos == 0 then return false end --avoid unnecessary dupe rows
+			
 			local guid = team_avatar:field("avatar_guid"):value():get()
 			local entity_id = team_avatar:field("entity_id"):value():get()
 
@@ -78,9 +82,6 @@ function on_filter(packet)
 			local avatar_id = avatar_info:field("avatar_id"):value():get()
 			resolver.add_avatar(guid, entity_id, avatar_id)
 			team_text = team_text .. resolver.get_root(avatar_id) .. (i == #list and "" or ", ")
-
-			local block = team_avatar:field("ability_control_block"):value():get()
-			local embryos = block:field("ability_embryo_list"):value():get()
 
 			local got_offset = false
 			for _, a in ipairs(embryos) do

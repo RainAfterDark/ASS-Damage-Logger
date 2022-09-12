@@ -1,16 +1,16 @@
 from pathlib import Path
-from enum import Enum
 import re
-
-class col(Enum):
-    type = 0; uid = 1; time = 2; delta = 3; source = 4; attacker = 5
-    damage = 6; crit = 7; apply = 8; element = 9; reaction = 10; amp_type = 11
-    amp_rate = 12; count = 13; aid = 14; mid = 15; defender = 16
 
 path = Path(__file__).parent
 
 # only works with one team at a time, log files with multiple teams and rotations will be combined together
 log_file = open(path / "../../latest.txt")
+
+col = {}
+labels = ["type", "uid", "time", "delta", "source", "attacker", "damage", "crit", "apply",
+          "element", "reaction", "amp_type", "amp_rate", "count", "aid", "mid", "defender"]
+for i in range(len(labels)):
+    col[labels[i]] = i
 
 occurence_table = {}
 reaction_table = {}
@@ -19,11 +19,11 @@ reaction_table = {}
 for line in log_file:
     line = line.strip("\n")
     row = re.split(":\s|,\s", line)
-    if row[col.type.value] == "DAMAGE":
-        reaction = row[col.reaction.value]
+    if row[col["type"]] == "DAMAGE":
+        reaction = row[col["reaction"]]
         if reaction != "None":
-            attacker = row[col.attacker.value]
-            damage = float(row[col.damage.value])
+            attacker = row[col["attacker"]]
+            damage = float(row[col["damage"]])
             if reaction not in occurence_table:
                 occurence_table[reaction] = {}
             if damage not in occurence_table[reaction]:
@@ -56,26 +56,28 @@ log_file.seek(0)
 for line in log_file:
     line = line.strip("\n")
     row = re.split(":\s|,\s", line)
-    type = row[col.type.value]
+    type = row[col["type"]]
     
-    if type == "TEAM UPDATE":
-        for i in range(1, len(row)):
-            damage_table[row[i]] = {
+    if type == "DAMAGE":
+        attacker = row[col["attacker"]]
+        if attacker not in damage_table:
+            damage_table[attacker] = {
                 "Total": 0,
                 "Crit": {"true": 0, "false": 0},
                 "Apply": {"true": 0, "false": 0}
             }
-    
-    elif type == "DAMAGE":
-        attacker = row[col.attacker.value]
-        damage = float(row[col.damage.value])
+        damage = float(row[col["damage"]])
         damage_table[attacker]["Total"] += damage
         total_damage += damage
-        total_time += int(row[col.delta.value])
+        total_time += int(row[col["delta"]])
 
-        reaction = row[col.reaction.value]
+        reaction = row[col["reaction"]]
         if reaction != "None":
-            attacker = reaction_table[reaction][damage]
+            corrected = reaction_table[reaction][damage]
+            if attacker != corrected:
+                uid = row[col["uid"]]
+                print(f"Resolved: {uid}, {attacker} -> {corrected}")
+                attacker = corrected
             if reaction not in damage_table[attacker]:
                 damage_table[attacker][reaction] = 0
             damage_table[attacker][reaction] += damage
@@ -87,15 +89,15 @@ for line in log_file:
             ownership_table[reaction][attacker] += 1
         
         else:
-            damage_table[attacker]["Crit"][row[col.crit.value]] += 1
-            damage_table[attacker]["Apply"][row[col.apply.value]] += 1
+            damage_table[attacker]["Crit"][row[col["crit"]]] += 1
+            damage_table[attacker]["Apply"][row[col["apply"]]] += 1
 
-            source = row[col.source.value]
+            source = row[col["source"]]
             if source not in damage_table[attacker]:
                 damage_table[attacker][source] = 0
             damage_table[attacker][source] += damage
 
-            amp_type = row[col.amp_type.value]
+            amp_type = row[col["amp_type"]]
             if amp_type == "None": continue
             if amp_type not in damage_table[attacker]:
                 damage_table[attacker][amp_type] = 0
