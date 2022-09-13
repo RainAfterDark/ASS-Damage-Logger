@@ -83,7 +83,7 @@ end
 --#endregion
 
 --#region Output
-function util.log_file(...)
+function util.log_to_file(...)
 	if FILE_LOGGING and log_file then
 		log_file:write(...)
 		log_file:flush()
@@ -92,18 +92,18 @@ end
 
 function util.write_and_log(...)
 	io.write(...)
-	util.log_file(...)
+	util.log_to_file(...)
 end
 
 local odd_row = true
 local odd_col = true
-local dont_log_row = false
+local dont_log_to_file = false
 
 local function write_col(str, len, c, last)
 	if str ~= nil then
 		str = tostring(str)
-		if not dont_log_row then
-			util.log_file(str, last and "" or ", ")
+		if not dont_log_to_file then
+			util.log_to_file(str, last and "" or ",")
 		end
 	else
 		str = "-"
@@ -144,22 +144,44 @@ function util.write_row(type, uid, time, delta, source, attacker,
 	odd_row = not odd_row
 
 	io.write("\n")
-	if not dont_log_row then
-		util.log_file("\n")
+	if not dont_log_to_file then
+		util.log_to_file("\n")
 	end
 end
 
-function util.write_header(team_text, offsets_text)
-	util.log_file(team_text, "\n")
+function util.write_header(team_avatars, offsets)
+	if FILE_LOG_TEAM_UPDATE then
+		util.log_to_file("TEAM")
+		for _, v in ipairs(team_avatars) do
+			util.log_to_file(",", v)
+		end
+		util.log_to_file("\n")
+	end
+
 	util.color_bg(240)
-	io.write(" ", util.pad(team_text, 227), "\n")
+	local team_text = " TEAM UPDATE: "
+	for i, v in ipairs(team_avatars) do
+		team_text = team_text .. v
+		if #team_avatars > i then
+			team_text = team_text .. ", "
+		end
+	end
+	io.write(util.pad(team_text, 228), "\n")
+
 	util.color_bg(239)
-	io.write(" ", util.pad(offsets_text, 227), "\n")
-	util.reset_style()
-	dont_log_row = true
+	local offsets_text = " AID OFFSETS: "
+	for i, v in ipairs(offsets) do
+		offsets_text = offsets_text .. v
+		if #offsets > i then
+			offsets_text = offsets_text .. ", "
+		end
+	end
+	io.write(util.pad(offsets_text, 228), "\n")
+
+	dont_log_to_file = true
 	util.write_row("Type", "UID", "Time", "Delta", "Source (Gadget / Ability)", "Attacker", 
 	"Damage", "Crit", "Apply", "Element", "Reaction", "Amp Type", "Amp Rate", "C", "AID", "MID", "Defender")
-	dont_log_row = false
+	dont_log_to_file = false
 end
 --#endregion
 

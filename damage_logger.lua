@@ -15,6 +15,9 @@ FILE_LOGGING = true
 FILE_OPEN_MODE = "w"
 --"a" to append, "w" to overwrite
 
+FILE_LOG_TEAM_UPDATE = false
+--Option to log team updates to file, leave disabled unless logging multiple runs (such as in abyss)
+
 SHOW_PACKETS_ON_FILTER = true
 --Option to show packets in captures window after applying filter
 --Disabling *might* improve performance but I don't think I've seen much of a difference
@@ -66,8 +69,8 @@ function on_filter(packet)
 		local node = packet:content():node()
 		local list = node:field("scene_team_avatar_list"):value():get()
 
-		local team_text = "TEAM UPDATE: "
-		local offsets_text = "AID OFFSETS: "
+		local team_avatars = {}
+		local offsets = {}
 		for i in ipairs(list) do
 			local team_avatar = list[i]:get()
 			local block = team_avatar:field("ability_control_block"):value():get()
@@ -81,7 +84,8 @@ function on_filter(packet)
 			local avatar_info = entity_info:field("avatar"):value():get()
 			local avatar_id = avatar_info:field("avatar_id"):value():get()
 			resolver.add_avatar(guid, entity_id, avatar_id)
-			team_text = team_text .. resolver.get_root(avatar_id) .. (i == #list and "" or ", ")
+			--team_text = team_text .. resolver.get_root(avatar_id) .. (i == #list and "" or ", ")
+			team_avatars[i] = resolver.get_root(avatar_id)
 
 			local got_offset = false
 			for _, a in ipairs(embryos) do
@@ -89,13 +93,14 @@ function on_filter(packet)
 				local hash = a:get():field("ability_name_hash"):value():get()
 				resolver.add_ability_hash(entity_id, aid, hash)
 				if not got_offset then
-					offsets_text = offsets_text .. aid .. (i == #list and "" or ", ")
+					--offsets_text = offsets_text .. aid .. (i == #list and "" or ", ")
+					offsets[i] = aid
 					got_offset = true
 				end
 			end
 		end
 
-		util.write_header(team_text, offsets_text)
+		util.write_header(team_avatars, offsets)
 		return SHOW_PACKETS_ON_FILTER
 	
 	elseif pid == packet_ids.SceneEntityAppearNotify then

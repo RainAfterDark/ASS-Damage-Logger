@@ -18,7 +18,7 @@ reaction_table = {}
 #region Reaction Correction
 for line in log_file:
     line = line.strip("\n")
-    row = re.split(":\s|,\s", line)
+    row = re.split(",", line)
     if row[col["type"]] == "DAMAGE":
         reaction = row[col["reaction"]]
         if reaction != "None":
@@ -55,7 +55,7 @@ ownership_table = {}
 log_file.seek(0)
 for line in log_file:
     line = line.strip("\n")
-    row = re.split(":\s|,\s", line)
+    row = re.split(",", line)
     type = row[col["type"]]
     
     if type == "DAMAGE":
