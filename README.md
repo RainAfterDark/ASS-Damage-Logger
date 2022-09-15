@@ -3,9 +3,9 @@ Proof-of-concept packet damage logger for anime game with Akebi-Sniffer-Scriptin
 
 ## Usage
 - Setting up Akebi and Sniffer
-  - Download and extract source code zip or do `git clone https://github.com/RainAfterDark/ASS-Damage-Logger.git`
+  - `git clone https://github.com/RainAfterDark/ASS-Damage-Logger.git`
   - Build [Akebi](https://github.com/Akebi-Group/Akebi-GC) or get the latest artifact from their [actions](https://github.com/Akebi-Group/Akebi-GC/actions).
-  - Build my fork of [Akebi-PacketSniffer](https://github.com/RainAfterDark/Akebi-PacketSniffer) or download my [unofficial release](https://github.com/RainAfterDark/Akebi-PacketSniffer/releases/tag/Unofficial). (until my [PR](https://github.com/Akebi-Group/Akebi-PacketSniffer/pull/10) gets merged)
+  - Build my fork of [Akebi-PacketSniffer](https://github.com/RainAfterDark/Akebi-PacketSniffer) or download my [unofficial release](https://github.com/RainAfterDark/Akebi-PacketSniffer/releases). (until my [PR](https://github.com/Akebi-Group/Akebi-PacketSniffer/pull/10) gets merged)
   - Highly recommend getting protos from [Sorapointa's](https://github.com/Sorapointa/Sorapointa-Protos) even if you have your own (your fields or enum names may be different).
   - After injecting the game with Akebi, open the menu, go to settings, and all the way down, turn on "Capturing".
   - Open up the sniffer, set-up your protos and load the script `damage_logger.lua` from wherever you may have placed it. A simple video tutorial for setting up the sniffer should be in the repo's README.
