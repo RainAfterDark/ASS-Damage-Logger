@@ -11,8 +11,9 @@ Proof-of-concept packet damage logger for anime game with Akebi-Sniffer-Scriptin
   - Open up the sniffer, set-up your protos and load the script `damage_logger.lua` from wherever you may have placed it. A simple video tutorial for setting up the sniffer should be in the repo's README.
   
 - Using the script
+  - Add the script to the main filter and then press "Apply".
   - I've made the script work specifically with packet level filter **ENABLED** to save memory, since we don't need every packet getting saved.
-  - I recommend that you first disconnect the pipe in settings while preparing to log a rotation, and clearing packets if there are any (right click any packet in the capture window and a context menu should open, press "Clear").
+  - I recommend that you first disconnect the pipe in settings while preparing to log a rotation, and clearing packets if there are any (right click any packet in the capture window and a context menu should open, press "Clear"). Reload the script after you do so.
   - Whenever you're ready, make sure that you connect the pipe again **BEFORE** changing scenes or swapping teams. This is to capture the packet telling the server the characters you're using, which the script needs.
   - Do stuff once you're connected.
   - To actually "log" the damage, you can disconnect the pipe again now (to save memory). If you see packets are still flooding, check the packet queue size on the menu bar.
