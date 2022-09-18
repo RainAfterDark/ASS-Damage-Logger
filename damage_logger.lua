@@ -192,7 +192,7 @@ function on_filter(packet)
 			local aid = ability:field("instanced_ability_id"):value():get()
 			local mid = ability:field("instanced_modifier_id"):value():get()
 			local caster = ability:field("ability_caster_id"):value():get()
-			local reaction = resolver.get_reaction(aid, element)
+			local reaction = resolver.get_reaction(aid, mid, element)
 
 			local attacker = attack:field("attacker_id"):value():get()
 			local source = resolver.get_source(attacker, caster, aid, element, defender)
@@ -270,6 +270,8 @@ function on_filter(packet)
 
 	return false
 end
+
+
 
 
 

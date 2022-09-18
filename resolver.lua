@@ -104,7 +104,7 @@ function resolver.get_root(id)
 		return type --would be odd if this is Team but eh
 	end
 
-	return id
+	return id or "Unknown"
 end
 
 function resolver.get_apply(a)
@@ -188,7 +188,12 @@ function resolver.get_source(attacker, caster, aid, element, defender)
 	return type
 end
 
-function resolver.get_reaction(aid, element)
+function resolver.get_reaction(aid, mid, element)
+
+	if aid == 2 and mid == 5 and element == "Dendro" then
+		return "Bloom"
+	end
+
 	local reaction = reaction_names[aid]
 	if reaction then
         if(reaction == "Burning" and element ~= "Pyro") or
