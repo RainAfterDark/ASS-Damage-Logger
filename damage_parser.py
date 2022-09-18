@@ -20,10 +20,11 @@ for line in log_file:
     line = line.strip("\n")
     row = re.split(",", line)
     if row[col["type"]] == "DAMAGE":
+        damage = float(row[col["damage"]])
+        if damage == 0: continue
         reaction = row[col["reaction"]]
         if reaction != "None":
             attacker = row[col["attacker"]]
-            damage = float(row[col["damage"]])
             if reaction not in occurence_table:
                 occurence_table[reaction] = {}
             if damage not in occurence_table[reaction]:
@@ -59,6 +60,9 @@ for line in log_file:
     type = row[col["type"]]
     
     if type == "DAMAGE":
+        damage = float(row[col["damage"]])
+        if damage == 0: continue
+
         attacker = row[col["attacker"]]
         if attacker not in damage_table:
             damage_table[attacker] = {
@@ -66,7 +70,7 @@ for line in log_file:
                 "Crit": {"true": 0, "false": 0},
                 "Apply": {"true": 0, "false": 0}
             }
-        damage = float(row[col["damage"]])
+        
         damage_table[attacker]["Total"] += damage
         total_damage += damage
         total_time += int(row[col["delta"]])
