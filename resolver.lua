@@ -22,8 +22,9 @@ local id_types = {
 
 local element_names = {
 	[0] = "Physical", [1] = "Pyro", [2] = "Hydro", [3] = "Dendro",
-    [4] = "Electro", [6] = "Unknown6", [5] = "Cryo", [7] = "Anemo",
-    [8] = "Geo", [9] = "Unknown9" 
+    [4] = "Electro", [6] = "Frozen", [5] = "Cryo", [7] = "Anemo",
+    [8] = "Geo", [9] = "AntiFire", [10] = "VMI", [11] = "Mushroom",
+	[12] = "Overdose", [12] = "Wood", [13] = "COUNT"
 }
 
 local amp_type_names = {
