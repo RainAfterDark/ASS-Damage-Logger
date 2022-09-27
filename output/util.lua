@@ -105,10 +105,9 @@ local function write_col(str, len, c, last)
 		if not dont_log_to_file then
 			util.log_to_file(str, last and "" or ",")
 		end
-	else
-		str = "-"
 	end
 
+	str = (str == nil or str == "") and "-" or str
 	if c then util.color_fg(c) end
 	util.color_bg(theme.col[odd_row][odd_col])
 	io.write(" ", util.pad(str, len), " ")
@@ -117,7 +116,7 @@ local function write_col(str, len, c, last)
 end
 
 function util.write_row(type, uid, time, delta, source, attacker, 
-	damage, crit, apply, element, reaction, amp_type, amp_rate, count, aid, mid, defender)
+	damage, crit, apply, e_break, e_delta, element, reaction, amp_type, amp_rate, count, aid, mid, defender)
 
 	write_col(type, 6)
 	write_col(uid, 6)
@@ -129,6 +128,8 @@ function util.write_row(type, uid, time, delta, source, attacker,
 	write_col(damage, 15, damage_color(damage))
 	write_col(crit, 5, theme.bool[crit])
 	write_col(apply, 5, theme.bool[apply])
+	write_col(e_break, 2)
+	write_col(e_delta, 7)
 	write_col(element, 8, theme.element[element])
 	write_col(reaction, 15, reaction ~= "None" and theme.element[element])
 	write_col(amp_type, 9, amp_type ~= "None" and theme.element[element])
@@ -158,6 +159,7 @@ function util.write_header(team_avatars, offsets)
 		util.log_to_file("\n")
 	end
 
+	local row_len = 241
 	util.color_bg(240)
 	local team_text = " TEAM UPDATE: "
 	for i, v in ipairs(team_avatars) do
@@ -166,7 +168,7 @@ function util.write_header(team_avatars, offsets)
 			team_text = team_text .. ", "
 		end
 	end
-	io.write(util.pad(team_text, 228), "\n")
+	io.write(util.pad(team_text, row_len), "\n")
 
 	util.color_bg(239)
 	local offsets_text = " AID OFFSETS: "
@@ -176,11 +178,11 @@ function util.write_header(team_avatars, offsets)
 			offsets_text = offsets_text .. ", "
 		end
 	end
-	io.write(util.pad(offsets_text, 228), "\n")
+	io.write(util.pad(offsets_text, row_len), "\n")
 
 	dont_log_to_file = true
 	util.write_row("Type", "UID", "Time", "Delta", "Source (Gadget / Ability)", "Attacker", 
-	"Damage", "Crit", "Apply", "Element", "Reaction", "Amp Type", "Amp Rate", "C", "AID", "MID", "Defender")
+	"Damage", "Crit", "Apply", "EB", "E-Delta", "Element", "Reaction", "Amp Type", "Amp Rate", "C", "AID", "MID", "Defender")
 	dont_log_to_file = false
 end
 --#endregion

@@ -3,11 +3,11 @@
 LOG_SKILL_CASTS = false
 --Option to log skill casts (autos also count)
 
-LOG_ONLY_DAMAGE_TO_MONSTERS = true
+LOG_ONLY_DAMAGE_TO_MONSTERS = false
 --Option to only log damage to monster type entities
 
-LOG_ZERO_DAMAGE = false
---Option to log damage registered as 0 (happens quite often but may be important)
+LOG_ONLY_NONZERO_DAMAGE = false
+--Option to only log non-zero damage (happens quite often but may be important)
 
 FILE_LOGGING = true
 --Write logs to file, filename will always be 'latest.txt'
@@ -36,13 +36,7 @@ local util = require("output.util")
 util.init()
 
 local last_uid = 0
-local last_packets = {
-	SceneTeamUpdateNotify = 0,
-	SceneEntityAppearNotify = 0,
-	CombatInvocationsNotify = 0,
-	AbilityInvocationsNotify = 0,
-	EvtDoSkillSuccNotify = 0
-}
+local last_shown = 0
 
 function on_filter(packet)
 
@@ -58,10 +52,8 @@ function on_filter(packet)
 	--Packet is always sent when loading into a new scene / changing teams (even just swapping characters around)
 	if pid == packet_ids.SceneTeamUpdateNotify then
 		if first_run then return true end
-		if last_packets.SceneTeamUpdateNotify >= uid then
-			return SHOW_PACKETS_ON_FILTER
-		end
-		last_packets.SceneTeamUpdateNotify = uid
+		if last_shown >= uid then return SHOW_PACKETS_ON_FILTER end
+		last_shown = uid
 
 		resolver.reset_ids()
 		util.reset_last_time()
@@ -84,7 +76,6 @@ function on_filter(packet)
 			local avatar_info = entity_info:field("avatar"):value():get()
 			local avatar_id = avatar_info:field("avatar_id"):value():get()
 			resolver.add_avatar(guid, entity_id, avatar_id)
-			--team_text = team_text .. resolver.get_root(avatar_id) .. (i == #list and "" or ", ")
 			team_avatars[i] = resolver.get_root(avatar_id)
 
 			local got_offset = false
@@ -93,7 +84,6 @@ function on_filter(packet)
 				local hash = a:get():field("ability_name_hash"):value():get()
 				resolver.add_ability_hash(entity_id, aid, hash)
 				if not got_offset then
-					--offsets_text = offsets_text .. aid .. (i == #list and "" or ", ")
 					offsets[i] = aid
 					got_offset = true
 				end
@@ -105,10 +95,8 @@ function on_filter(packet)
 	
 	elseif pid == packet_ids.SceneEntityAppearNotify then
 		if first_run then return true end
-		if last_packets.SceneEntityAppearNotify >= uid then
-			return SHOW_PACKETS_ON_FILTER
-		end
-		last_packets.SceneEntityAppearNotify = uid
+		if last_shown >= uid then return SHOW_PACKETS_ON_FILTER end
+		last_shown = uid
 
 		local node = packet:content():node()
 		local list = node:field("entity_list"):value():get()
@@ -118,8 +106,7 @@ function on_filter(packet)
 			local entity_id = entity:field("entity_id"):value():get()
 			local type = entity:field("entity_type"):value():get()
 
-			--PROT_ENTITY_TYPE_MONSTER = 2
-			if type == 2 then
+			if type == 2 then --PROT_ENTITY_TYPE_MONSTER = 2
 				local info = entity:field("monster"):value():get()
 				local monster_id = info:field("monster_id"):value():get()
 				resolver.add_monster(entity_id, monster_id)
@@ -158,8 +145,7 @@ function on_filter(packet)
 		local list = node:field("invoke_list"):value():get()[1]:get()
 		local arg = list:field("argument_type"):value():get()
 
-		--COMBAT_TYPE_ARGUMENT_EVT_BEING_HIT
-		if arg ~= 1 then return false end
+		if arg ~= 1 then return false end --COMBAT_TYPE_ARGUMENT_EVT_BEING_HIT
 		if first_run then return true end
 		
 		if list:has_field("combat_data_unpacked") then
@@ -167,22 +153,19 @@ function on_filter(packet)
 			local attack = data:field("attack_result"):value():get()
 
 			local damage = attack:field("damage"):value():get()
-			if not LOG_ZERO_DAMAGE and damage == 0 then
-				return false
-			end
-
 			local defender = attack:field("defense_id"):value():get()
-			if LOG_ONLY_DAMAGE_TO_MONSTERS and resolver.id_type(defender) ~= "Monster" then
+			if (LOG_ONLY_NONZERO_DAMAGE and damage == 0) or
+			   (LOG_ONLY_DAMAGE_TO_MONSTERS and resolver.id_type(defender) ~= "Monster") then
 				return false
 			end
 
-			if last_packets.CombatInvocationsNotify >= uid then
-				return SHOW_PACKETS_ON_FILTER
-			end
-			last_packets.CombatInvocationsNotify = uid
+			if last_shown >= uid then return SHOW_PACKETS_ON_FILTER end
+			last_shown = uid
 
 			local crit = attack:field("is_crit"):value():get()
 			local apply = resolver.get_apply(attack:field("element_durability_attenuation"):value():get())
+			local e_break = attack:field("endure_break"):value():get()
+			local e_delta = attack:field("endure_delta"):value():get()
 			local element = resolver.get_element(attack:field("element_type"):value():get())
 			local amp_type = resolver.get_amp_type(attack:field("amplify_reaction_type"):value():get())
 			local amp_rate = attack:field("element_amplify_rate"):value():get()
@@ -205,7 +188,7 @@ function on_filter(packet)
 			local delta = util.delta_time(timestamp)
 			
 			util.write_row("DAMAGE", uid, time, delta, source, attacker, 
-			damage, crit, apply, element, reaction, amp_type, amp_rate, count, aid, mid, defender)
+			damage, crit, apply, e_break, e_delta, element, reaction, amp_type, amp_rate, count, aid, mid, defender)
 			return SHOW_PACKETS_ON_FILTER
 		end
 	
@@ -214,19 +197,15 @@ function on_filter(packet)
 		local list = node:field("invokes"):value():get()[1]:get()
 		local arg = list:field("argument_type"):value():get()
 
-		--ABILITY_INVOKE_ARGUMENT_META_UPDATE_BASE_REACTION_DAMAGE = 19
-		--ABILITY_INVOKE_ARGUMENT_META_TRIGGER_ELEMENT_REACTION = 20
-		if arg ~= 19 
-		--and arg ~= 20 
+		if arg ~= 19 --ABILITY_INVOKE_ARGUMENT_META_UPDATE_BASE_REACTION_DAMAGE = 19
+		--and arg ~= 20 --ABILITY_INVOKE_ARGUMENT_META_TRIGGER_ELEMENT_REACTION = 20
 		then return false end
 		if first_run then return true end
 
 		if list:has_field("ability_data_unpacked") then
 
-			if last_packets.AbilityInvocationsNotify >= uid then
-				return SHOW_PACKETS_ON_FILTER
-			end
-			last_packets.AbilityInvocationsNotify = uid
+			if last_shown >= uid then return SHOW_PACKETS_ON_FILTER end
+			last_shown = uid
 
 			local entity_id = list:field("entity_id"):value():get() or 0
 			local ability = list:field("ability_data_unpacked"):value():get()
@@ -249,13 +228,11 @@ function on_filter(packet)
 			return SHOW_PACKETS_ON_FILTER
 		end
 	
-	elseif pid == packet_ids.EvtDoSkillSuccNotify and LOG_SKILL_CASTS then
-
+	elseif pid == packet_ids.EvtDoSkillSuccNotify then
 		if first_run then return true end
-		if last_packets.EvtDoSkillSuccNotify >= uid then
-			return SHOW_PACKETS_ON_FILTER
-		end
-		last_packets.EvtDoSkillSuccNotify = uid
+		if not LOG_SKILL_CASTS then return false end
+		if last_shown >= uid then return SHOW_PACKETS_ON_FILTER end
+		last_shown = uid
 
 		local node = packet:content():node()
 		local caster = resolver.get_root(node:field("caster_id"):value():get())
@@ -270,10 +247,3 @@ function on_filter(packet)
 
 	return false
 end
-
-
-
-
-
-
-

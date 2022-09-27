@@ -24,7 +24,7 @@ local element_names = {
 	[0] = "Physical", [1] = "Pyro", [2] = "Hydro", [3] = "Dendro",
     [4] = "Electro", [6] = "Frozen", [5] = "Cryo", [7] = "Anemo",
     [8] = "Geo", [9] = "AntiFire", [10] = "VMI", [11] = "Mushroom",
-	[12] = "Overdose", [12] = "Wood", [13] = "COUNT"
+	[12] = "Overdose", [13] = "Wood", [14] = "COUNT"
 }
 
 local amp_type_names = {
@@ -44,6 +44,7 @@ local base_reaction_ids = {
 }
 --#endregion
 
+--#region Data Tables
 local guids = {}
 local avatar_ids = {}
 local avatar_abilities = {}
@@ -59,7 +60,9 @@ local monster_ids = {}
 local monster_count = {}
 local monster_affix = {}
 local monster_letter = 0
+--#endregion
 
+--#region Getting Data
 function resolver.id_type(id)
 	return id_types[tonumber(tostring(id):sub(1, 4))] or "Unknown"
 end
@@ -102,7 +105,7 @@ function resolver.get_root(id)
 		return resolved
 	
 	elseif type == "World" or type == "Team" then
-		return type --would be odd if this is Team but eh
+		return type
 	end
 
 	return id or "Unknown"
@@ -190,7 +193,6 @@ function resolver.get_source(attacker, caster, aid, element, defender)
 end
 
 function resolver.get_reaction(aid, mid, element)
-
 	if aid == 2 and mid == 5 and element == "Dendro" then
 		return "Bloom"
 	end
@@ -217,7 +219,9 @@ end
 function resolver.get_skill(id)
 	return skill_names[id] or id
 end
+--#endregion
 
+--#region Updating Data
 function resolver.add_avatar(guid, entity_id, avatar_id)
 	guids[guid] = avatar_id
     avatar_ids[entity_id] = avatar_id
@@ -255,9 +259,9 @@ function resolver.add_gadget(entity_id, owner_id, config_id)
 end
 
 function resolver.update_reaction(reaction, source_id, entity_id)
-	if resolver.id_type(entity_id) ~= "Monster" then
-		return
-	end
+	--if resolver.id_type(entity_id) ~= "Monster" then
+		--return
+	--end
 	base_reaction_dmg[reaction] = source_id
 end
 
@@ -281,5 +285,6 @@ function resolver.reset_ids()
 		avatar_abilities[avatar_id] = nil
 	end
 end
+--#endregion
 
 return resolver
