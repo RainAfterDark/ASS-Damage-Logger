@@ -169,8 +169,6 @@ function on_filter(packet)
 
 			local crit = get(attack, "is_crit")
 			local apply = resolver.get_apply(get(attack, "element_durability_attenuation"))
-			local e_break = get(attack, "endure_break")
-			local e_delta = get(attack, "endure_delta")
 			local element = resolver.get_element(get(attack, "element_type"))
 			local amp_type = resolver.get_amp_type(get(attack, "amplify_reaction_type"))
 			local amp_rate = get(attack, "element_amplify_rate")
@@ -193,7 +191,7 @@ function on_filter(packet)
 			local delta = util.delta_time(timestamp)
 			
 			util.write_row("DAMAGE", uid, time, delta, source, attacker, 
-			damage, crit, apply, e_break, e_delta, element, reaction, amp_type, amp_rate, count, aid, mid, defender)
+			damage, crit, apply, element, reaction, amp_type, amp_rate, count, aid, mid, defender)
 			return SHOW_PACKETS_ON_FILTER
 		end
 	

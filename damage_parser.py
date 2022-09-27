@@ -8,7 +8,7 @@ log_file = open(path / "../../latest.txt")
 
 col = {}
 labels = ["type", "uid", "time", "delta", "source", "attacker", "damage", "crit", "apply",
-          "e_break", "e_delta", "element", "reaction", "amp_type", "amp_rate", "count", "aid", "mid", "defender"]
+          "element", "reaction", "amp_type", "amp_rate", "count", "aid", "mid", "defender"]
 for i in range(len(labels)):
     col[labels[i]] = i
 
