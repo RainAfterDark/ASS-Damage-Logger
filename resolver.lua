@@ -195,6 +195,8 @@ end
 function resolver.get_reaction(aid, mid, element)
 	if aid == 2 and mid == 5 and element == "Dendro" then
 		return "Bloom"
+	elseif aid == 1 and mid == 2 and element == "Dendro" then
+		return "Hyperbloom"
 	end
 
 	local reaction = reaction_names[aid]
