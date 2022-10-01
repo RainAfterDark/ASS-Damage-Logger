@@ -1,5 +1,8 @@
 --#region Config
 
+REALTIME_LOGGING = true
+--Enable only when using pass through mode in the sniffer (or when not using packet level filter)
+
 LOG_SKILL_CASTS = false
 --Option to log skill casts (autos also count)
 
@@ -15,11 +18,11 @@ FILE_LOGGING = true
 FILE_OPEN_MODE = "w"
 --"a" to append, "w" to overwrite
 
-FILE_LOG_TEAM_UPDATE = false
+FILE_LOG_TEAM_UPDATE = true
 --Option to log team updates to file, leave disabled unless logging multiple runs (such as in abyss)
 
 SHOW_PACKETS_ON_FILTER = true
---Option to show packets in captures window after applying filter
+--Option to show packets in captures window after applying filter (if using packet level filter method)
 --Disabling *might* improve performance but I don't think I've seen much of a difference
 
 USE_REACTION_CORRECTION = false
@@ -42,22 +45,25 @@ local function get(node, field)
 	return node:field(field):value():get()
 end
 
+local function filter_check(uid)
+	if REALTIME_LOGGING then return end
+	if uid > last_uid then
+		last_uid = uid
+		return true
+	end
+	if last_shown >= uid then return SHOW_PACKETS_ON_FILTER end
+	last_shown = uid
+end
+
 function on_filter(packet)
 
 	local uid = packet:uid()
 	local pid = packet:mid()
-	local first_run = false
-
-	if uid > last_uid then
-		last_uid = uid
-		first_run = true
-	end
 
 	--Packet is always sent when loading into a new scene / changing teams (even just swapping characters around)
 	if pid == packet_ids.SceneTeamUpdateNotify then
-		if first_run then return true end
-		if last_shown >= uid then return SHOW_PACKETS_ON_FILTER end
-		last_shown = uid
+		local fc = filter_check(uid)
+		if fc ~= nil then return fc end
 
 		resolver.reset_ids()
 		util.reset_last_time()
@@ -99,9 +105,8 @@ function on_filter(packet)
 		return SHOW_PACKETS_ON_FILTER
 	
 	elseif pid == packet_ids.SceneEntityAppearNotify then
-		if first_run then return true end
-		if last_shown >= uid then return SHOW_PACKETS_ON_FILTER end
-		last_shown = uid
+		local fc = filter_check(uid)
+		if fc ~= nil then return fc end
 
 		local node = packet:content():node()
 		local list = get(node, "entity_list")
@@ -133,16 +138,12 @@ function on_filter(packet)
 		local config_id = get(node, "config_id")
 		resolver.add_gadget(entity_id, owner_id, config_id)
 
-		if last_uid > uid then
-			return SHOW_PACKETS_ON_FILTER
-		end
+		if last_uid > uid then return SHOW_PACKETS_ON_FILTER end
 		return true
 	end
 
 	if pid == packet_ids.UnionCmdNotify then
-		if last_uid > uid then
-			return false
-		end
+		if last_uid > uid then return false end
 		return true
 	
 	elseif pid == packet_ids.CombatInvocationsNotify then
@@ -151,7 +152,8 @@ function on_filter(packet)
 		local arg = get(list, "argument_type")
 
 		if arg ~= 1 then return false end --COMBAT_TYPE_ARGUMENT_EVT_BEING_HIT
-		if first_run then return true end
+		local fc = filter_check(uid)
+		if fc ~= nil then return fc end
 		
 		if list:has_field("combat_data_unpacked") then
 			local data = get(list, "combat_data_unpacked")
@@ -163,9 +165,6 @@ function on_filter(packet)
 			   (LOG_ONLY_DAMAGE_TO_MONSTERS and resolver.id_type(defender) ~= "Monster") then
 				return false
 			end
-
-			if last_shown >= uid then return SHOW_PACKETS_ON_FILTER end
-			last_shown = uid
 
 			local crit = get(attack, "is_crit")
 			local apply = resolver.get_apply(get(attack, "element_durability_attenuation"))
@@ -203,13 +202,10 @@ function on_filter(packet)
 		if arg ~= 19 --ABILITY_INVOKE_ARGUMENT_META_UPDATE_BASE_REACTION_DAMAGE = 19
 		--and arg ~= 20 --ABILITY_INVOKE_ARGUMENT_META_TRIGGER_ELEMENT_REACTION = 20
 		then return false end
-		if first_run then return true end
+		local fc = filter_check(uid)
+		if fc ~= nil then return fc end
 
 		if list:has_field("ability_data_unpacked") then
-
-			if last_shown >= uid then return SHOW_PACKETS_ON_FILTER end
-			last_shown = uid
-
 			local entity_id = get(list, "entity_id") or 0
 			local ability = get(list, "ability_data_unpacked")
 
@@ -232,10 +228,9 @@ function on_filter(packet)
 		end
 	
 	elseif pid == packet_ids.EvtDoSkillSuccNotify then
-		if first_run then return true end
+		local fc = filter_check(uid)
+		if fc ~= nil then return fc end
 		if not LOG_SKILL_CASTS then return false end
-		if last_shown >= uid then return SHOW_PACKETS_ON_FILTER end
-		last_shown = uid
 
 		local node = packet:content():node()
 		local caster = resolver.get_root(get(node, "caster_id"))
