@@ -192,10 +192,11 @@ function resolver.get_source(attacker, caster, aid, element, defender)
 	return type
 end
 
-function resolver.get_reaction(aid, mid, element)
+function resolver.get_reaction(aid, mid, element, attacker)
 	if aid == 2 and mid == 5 and element == "Dendro" then
 		return "Bloom"
-	elseif aid == 1 and mid == 2 and element == "Dendro" then
+	elseif aid == 1 and mid == 2 and element == "Dendro" 
+	and resolver.get_root(attacker) ~= "Collei" then --holy cope conditions but whatever
 		return "Hyperbloom"
 	end
 

@@ -13,13 +13,11 @@ LOG_ONLY_NONZERO_DAMAGE = false
 --Option to only log non-zero damage (happens quite often but may be important)
 
 FILE_LOGGING = true
---Write logs to file, filename will always be 'latest.txt'
+--Write logs to file in /damage_logs (in the same directory as the sniffer)
 
-FILE_OPEN_MODE = "w"
---"a" to append, "w" to overwrite
-
-FILE_LOG_TEAM_UPDATE = true
---Option to log team updates to file, leave disabled unless logging multiple runs (such as in abyss)
+LOG_BY_TEAM_UPDATE = true
+--Option to create a new log file for every team update inside a new directory
+--If disabled, logs will all collect in one file, with team update rows
 
 SHOW_PACKETS_ON_FILTER = true
 --Option to show packets in captures window after applying filter (if using packet level filter method)
@@ -177,9 +175,9 @@ function on_filter(packet)
 			local aid = get(ability, "instanced_ability_id")
 			local mid = get(ability, "instanced_modifier_id")
 			local caster = get(ability, "ability_caster_id")
-			local reaction = resolver.get_reaction(aid, mid, element)
-
 			local attacker = get(attack, "attacker_id")
+			local reaction = resolver.get_reaction(aid, mid, element, attacker)
+
 			local source = resolver.get_source(attacker, caster, aid, element, defender)
 			attacker = resolver.get_attacker(attacker, caster, aid, damage, defender)
 			defender = resolver.id_type(defender) == "Gadget" and resolver.get_source(defender) or resolver.get_root(defender)

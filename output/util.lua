@@ -2,8 +2,7 @@ local util = {}
 
 local theme = require("output.theme")
 local gradient = require("output.gradient")
-
-local log_file
+local avatar_codes = require("data.avatar_codes")
 
 --#region String manipulation
 function util.trim(str, len)
@@ -82,7 +81,51 @@ function util.reset_last_time()
 end
 --#endregion
 
---#region Output
+--#region File logging
+local log_path = "damage_logs"
+local log_file, dir_name, team_name
+local team_index = 1
+local team_updated = false
+
+--https://stackoverflow.com/a/40195356
+--- Check if a file or directory exists in this path
+function util.exists(file)
+   local ok, err, code = os.rename(file, file)
+   if not ok then
+      if code == 13 then
+         -- Permission denied, but it exists
+         return true
+      end
+   end
+   return ok, err
+end
+
+--- Check if a directory exists in this path
+function util.isdir(path)
+   -- "/" works on both Unix and Windows
+   return util.exists(path .. "/")
+end
+
+function util.mkdir(dir)
+	if not util.isdir(dir) then 
+		os.execute("mkdir " .. dir) 
+	end
+end
+
+function util.open_log()
+	if FILE_LOGGING then
+		util.mkdir(log_path)
+		local name = os.date("%x-%X", os.time()):gsub("[/:]", "-")
+		if not LOG_BY_TEAM_UPDATE then
+			name = name .. ".log"
+			log_file = assert(io.open(log_path .. "/" .. name, "w"))
+		else
+			util.mkdir(log_path .. "\\" .. name)
+			dir_name = name
+		end
+	end
+end
+
 function util.log_to_file(...)
 	if FILE_LOGGING and log_file then
 		log_file:write(...)
@@ -94,7 +137,9 @@ function util.write_and_log(...)
 	io.write(...)
 	util.log_to_file(...)
 end
+--#endregion
 
+--#region Console logging
 local odd_row = true
 local odd_col = true
 local dont_log_to_file = false
@@ -103,6 +148,13 @@ local function write_col(str, len, c, last)
 	if str ~= nil then
 		str = tostring(str)
 		if not dont_log_to_file then
+			if team_updated then
+				local dir = log_path .. "/" .. dir_name .. "/"
+				local fn = team_index .. team_name .. ".log"
+				log_file = assert(io.open(dir .. fn, "w"))
+				team_index = team_index + 1
+				team_updated = false
+			end
 			util.log_to_file(str, last and "" or ",")
 		end
 	end
@@ -149,12 +201,19 @@ function util.write_row(type, uid, time, delta, source, attacker,
 end
 
 function util.write_header(team_avatars, offsets)
-	if FILE_LOG_TEAM_UPDATE then
+	if not LOG_BY_TEAM_UPDATE then
 		util.log_to_file("TEAM")
 		for _, v in ipairs(team_avatars) do
 			util.log_to_file(",", v)
 		end
 		util.log_to_file("\n")
+	else
+		team_name = ""
+		for _, v in ipairs(team_avatars) do
+			team_name = team_name .. "-" .. avatar_codes[v]
+		end
+		if log_file then log_file:close() end
+		team_updated = true
 	end
 
 	local row_len = 228
@@ -192,10 +251,7 @@ function util.init()
 	io.write(gradient.generate("Logger v" .. GAME_VERSION, {100, 255, 255}, {100, 255, 100}))
 	util.reset_style()
 	io.write(" by Ame\n\n")
-
-	if FILE_LOGGING then
-		log_file = assert(io.open("latest.txt", FILE_OPEN_MODE))
-	end
+	util.open_log()
 end
 
 return util
