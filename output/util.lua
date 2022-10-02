@@ -212,7 +212,10 @@ function util.write_header(team_avatars, offsets)
 		for _, v in ipairs(team_avatars) do
 			team_name = team_name .. "-" .. avatar_codes[v]
 		end
-		if log_file then log_file:close() end
+		if log_file then
+			log_file:close()
+			log_file = nil
+		end
 		team_updated = true
 	end
 
