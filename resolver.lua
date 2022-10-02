@@ -1,5 +1,7 @@
 local resolver = {}
 
+local util = require("output.util")
+
 --#region Names
 local avatar_names = require("data.avatar_names")
 local ability_hashes = require("data.ability_hashes")
@@ -242,14 +244,9 @@ end
 function resolver.add_monster(entity_id, monster_id)
 	local name = monster_names[monster_id] or ("Unknown " .. monster_id)
 	if not monster_count[monster_id] then
-		local affix = ""
-		for _ = 1, math.floor(monster_letter / 26) do
-			affix = affix .. "Z"
-		end
-		affix = affix .. string.char(65 + (monster_letter % 26))
-		monster_letter = monster_letter + 1
-		monster_affix[monster_id] = affix
+		monster_affix[monster_id] = util.base26(monster_letter)
 		monster_count[monster_id] = 1
+		monster_letter = monster_letter + 1
 	end
 
 	monster_ids[entity_id] = monster_affix[monster_id] .. monster_count[monster_id] .. " " .. name

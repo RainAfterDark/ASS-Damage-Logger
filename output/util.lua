@@ -4,7 +4,7 @@ local theme = require("output.theme")
 local gradient = require("output.gradient")
 local avatar_codes = require("data.avatar_codes")
 
---#region String manipulation
+--#region String and number manipulation
 function util.trim(str, len)
 	if str:len() <= len or str:len() < 2 then
 		return str 
@@ -26,6 +26,17 @@ function util.pad(str, len)
 		str = str .. " " 
 	end
 	return str
+end
+
+--modified https://stackoverflow.com/a/3554821
+function util.base26(n)
+    local t = {}
+    repeat
+        local d = (n % 26)
+        n = math.floor(n / 26)
+        table.insert(t, 1, string.char(65 + d))
+    until n == 0
+    return table.concat(t, "")
 end
 --#endregion
 
