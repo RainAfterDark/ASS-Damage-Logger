@@ -24,9 +24,10 @@ local id_types = {
 
 local element_names = {
 	[0] = "Physical", [1] = "Pyro", [2] = "Hydro", [3] = "Dendro",
-    [4] = "Electro", [6] = "Frozen", [5] = "Cryo", [7] = "Anemo",
-    [8] = "Geo", [9] = "AntiFire", [10] = "VMI", [11] = "Mushroom",
-	[12] = "Overdose", [13] = "Wood", [14] = "COUNT"
+    [4] = "Electro", [5] = "Cryo", [6] = "Frozen", [7] = "Anemo",
+    [8] = "Geo", [9] = "AntiFire", [10] = "VehicleMuteIce",
+	[11] = "Mushroom", [12] = "Overdose", [13] = "Wood",
+	[14] = "COUNT"
 }
 
 local amp_type_names = {
@@ -34,14 +35,14 @@ local amp_type_names = {
 }
 
 local reaction_names = { --AID = reaction??
-	[6] = "Burning", [10] = "Overload", [14] = "Electro-Charged", [19] = "Superconduct", 
-	[20] = "Swirl (Pyro)", [21] = "Swirl (Electro)", [22] = "Swirl (Hydro)", [23] = "Swirl (Cryo)",
+	[6] = "Burning", [10] = "Overload", [14] = "ElectroCharged", [19] = "Superconduct", 
+	[20] = "SwirlPyro", [21] = "SwirlElectro", [22] = "SwirlHydro", [23] = "SwirlCryo",
 	[31] = "Shatter", [37] = "Burgeon"
 }
 
 local base_reaction_ids = {
-	["Burning"] = 3, ["Overload"] = 1, ["Electro-Charged"] = 14, ["Superconduct"] = 16,
-	["Swirl (Pyro)"] = 17, ["Swirl (Electro)"] = 19, ["Swirl (Hydro)"] = 18, ["Swirl (Cryo)"] = 20,
+	["Burning"] = 3, ["Overload"] = 1, ["ElectroCharged"] = 14, ["Superconduct"] = 16,
+	["SwirlPyro"] = 17, ["SwirlElectro"] = 19, ["SwirlHydro"] = 18, ["SwirlCryo"] = 20,
 	["Shatter"] = 31, ["Burgeon"] = 36
 }
 --#endregion
@@ -130,7 +131,7 @@ function resolver.get_amp_type(id)
 	return amp_type_names[id] or id
 end
 
-function resolver.get_attacker(attacker, caster, aid, damage, defender)
+function resolver.get_attacker(attacker, caster, aid, damage)
 	if resolver.id_type(attacker) == "Reaction" or resolver.id_type(caster) == "Reaction" then
 
 		local candidate = resolver.get_root(base_reaction_dmg[base_reaction_ids[reaction_names[aid]]])
@@ -166,7 +167,7 @@ function resolver.get_attacker(attacker, caster, aid, damage, defender)
 	return resolver.get_root(attacker)
 end
 
-function resolver.get_source(attacker, caster, aid, element, defender)
+function resolver.get_source(attacker, caster, element, aid, defender)
 	local type = resolver.id_type(attacker)
 
 	if type == "Reaction" or resolver.id_type(caster) == "Reaction" then

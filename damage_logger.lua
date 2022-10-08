@@ -178,7 +178,7 @@ function on_filter(packet)
 			local attacker = get(attack, "attacker_id")
 			local reaction = resolver.get_reaction(aid, mid, element, attacker)
 
-			local source = resolver.get_source(attacker, caster, aid, element, defender)
+			local source = resolver.get_source(attacker, caster, element, aid, defender)
 			attacker = resolver.get_attacker(attacker, caster, aid, damage, defender)
 			defender = resolver.id_type(defender) == "Gadget" and resolver.get_source(defender) or resolver.get_root(defender)
 

@@ -32,7 +32,7 @@ end
 function util.base26(n)
     local t = {}
     repeat
-        local d = (n % 26)
+        local d = n % 26
         n = math.floor(n / 26)
         table.insert(t, 1, string.char(65 + d))
     until n == 0
