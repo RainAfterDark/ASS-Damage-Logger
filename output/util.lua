@@ -179,7 +179,7 @@ local function write_col(str, len, c, last)
 end
 
 function util.write_row(type, uid, time, delta, source, attacker, 
-	damage, crit, apply, element, reaction, amp_type, amp_rate, count, aid, mid, defender)
+	damage, crit, eda, element, reaction, amp_type, amp_rate, count, aid, mid, defender)
 
 	write_col(type, 6)
 	write_col(uid, 6)
@@ -190,7 +190,7 @@ function util.write_row(type, uid, time, delta, source, attacker,
 
 	write_col(damage, 15, damage_color(damage))
 	write_col(crit, 5, theme.bool[crit])
-	write_col(apply, 5, theme.bool[apply])
+	write_col(eda, 3)
 	write_col(element, 8, theme.element[element])
 	write_col(reaction, 15, reaction ~= "None" and theme.element[element])
 	write_col(amp_type, 9, amp_type ~= "None" and theme.element[element])
@@ -230,7 +230,7 @@ function util.write_header(team_avatars, offsets)
 		team_updated = true
 	end
 
-	local row_len = 228
+	local row_len = 226
 	util.color_bg(240)
 	local team_text = " TEAM UPDATE: "
 	for i, v in ipairs(team_avatars) do
@@ -253,7 +253,7 @@ function util.write_header(team_avatars, offsets)
 
 	dont_log_to_file = true
 	util.write_row("Type", "UID", "Time", "Delta", "Source (Gadget / Ability)", "Attacker", 
-	"Damage", "Crit", "Apply", "Element", "Reaction", "Amp Type", "Amp Rate", "C", "AID", "MID", "Defender")
+	"Damage", "Crit", "EDA", "Element", "Reaction", "Amp Type", "Amp Rate", "C", "AID", "MID", "Defender")
 	dont_log_to_file = false
 end
 --#endregion

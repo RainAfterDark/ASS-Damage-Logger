@@ -114,15 +114,6 @@ function resolver.get_root(id)
 	return id or "Unknown"
 end
 
-function resolver.get_apply(a)
-	if a == 1 then
-		return true
-	elseif a == 0 then
-		return false
-	end
-	return a
-end
-
 function resolver.get_element(id)
 	return element_names[id] or id
 end

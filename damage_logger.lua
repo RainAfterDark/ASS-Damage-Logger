@@ -165,7 +165,7 @@ function on_filter(packet)
 			end
 
 			local crit = get(attack, "is_crit")
-			local apply = resolver.get_apply(get(attack, "element_durability_attenuation"))
+			local eda = get(attack, "element_durability_attenuation")
 			local element = resolver.get_element(get(attack, "element_type"))
 			local amp_type = resolver.get_amp_type(get(attack, "amplify_reaction_type"))
 			local amp_rate = get(attack, "element_amplify_rate")
@@ -188,7 +188,7 @@ function on_filter(packet)
 			local delta = util.delta_time(timestamp)
 			
 			util.write_row("DAMAGE", uid, time, delta, source, attacker, 
-			damage, crit, apply, element, reaction, amp_type, amp_rate, count, aid, mid, defender)
+			damage, crit, eda, element, reaction, amp_type, amp_rate, count, aid, mid, defender)
 			return SHOW_PACKETS_ON_FILTER
 		end
 	
@@ -198,8 +198,9 @@ function on_filter(packet)
 		local arg = get(list, "argument_type")
 
 		if arg ~= 19 --ABILITY_INVOKE_ARGUMENT_META_UPDATE_BASE_REACTION_DAMAGE = 19
-		--and arg ~= 20 --ABILITY_INVOKE_ARGUMENT_META_TRIGGER_ELEMENT_REACTION = 20
+		and arg ~= 20 --ABILITY_INVOKE_ARGUMENT_META_TRIGGER_ELEMENT_REACTION = 20
 		then return false end
+		
 		local fc = filter_check(uid)
 		if fc ~= nil then return fc end
 
@@ -207,20 +208,20 @@ function on_filter(packet)
 			local entity_id = get(list, "entity_id") or 0
 			local ability = get(list, "ability_data_unpacked")
 
-			--if arg == 19 then
+			if arg == 19 then
 				local reaction = get(ability, "reaction_type")
 				local caster = get(ability, "source_caster_id")
 				--print("BaseDmg: " .. reaction .. " " .. resolver.get_id(caster) .. " " ..  resolver.get_id(entity_id))
 				resolver.update_reaction(reaction, caster, entity_id)
-			--else
-				--local reaction = get(ability, "element_reaction_type")
-				--local trigger = get(ability, "trigger_entity_id")
-				--local source = get(ability, "element_source_type")
-				--local reactor = get(ability, "element_reactor_type")
+			else
+				local reaction = get(ability, "element_reaction_type")
+				local trigger = get(ability, "trigger_entity_id")
+				local source = get(ability, "element_source_type")
+				local reactor = get(ability, "element_reactor_type")
 				--print("Trigger: " .. reaction .. " " .. resolver.get_id(trigger) .. " " ..  resolver.get_id(entity_id))
 				--" / " .. resolver.get_element(source) .. " -> " .. resolver.get_element(reactor))
-				--resolver.update_reaction(reaction, trigger, entity_id)
-			--end
+				resolver.update_reaction(reaction, trigger, entity_id)
+			end
 			
 			return SHOW_PACKETS_ON_FILTER
 		end
