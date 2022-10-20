@@ -102,14 +102,12 @@ for avatar, stats in damage_table.items():
     for stat, val in stats.items():
         if stat == "Total": continue
         if stat == "Crit":
-            rate = 0
             hits = val["true"]
             total_hits = hits + val["false"]
-            if total_hits > 0:
-                rate = (val["true"] / total_hits) * 100
+            rate = val["true"] / total_hits * 100 if total_hits > 0 else 0
             print(f"\t{stat} Rate: {hits}/{total_hits} ({round(rate, 2)}%)")
             continue
-        print(f"\t{stat}: {round(val):,}")
+        print(f"\t{stat}: {round(val):,} ({round(val / damage * 100, 2)}%)")
 
 print("\nReaction Ownership:")
 for reaction, owners in ownership_table.items():
