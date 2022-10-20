@@ -94,9 +94,11 @@ end
 
 --#region File logging
 local log_path = "damage_logs"
+local file_ext = ".txt"
 local log_file, dir_name, team_name
 local team_index = 1
 local team_updated = false
+local dir_created = false
 
 --https://stackoverflow.com/a/40195356
 --- Check if a file or directory exists in this path
@@ -127,13 +129,15 @@ function util.open_log()
 	if FILE_LOGGING then
 		util.mkdir(log_path)
 		local name = os.date("%x-%X", os.time()):gsub("[/:]", "-")
-		if not LOG_BY_TEAM_UPDATE then
-			name = name .. ".log"
-			log_file = assert(io.open(log_path .. "/" .. name, "w"))
-		else
-			util.mkdir(log_path .. "\\" .. name)
+		if LOG_BY_TEAM_UPDATE then
 			dir_name = name
+			io.write("Log directory: /" .. log_path .. "/" ..  name)
+		else
+			local path = log_path .. "/" .. name .. file_ext
+			log_file = assert(io.open(path, "w"))
+			io.write("Log file path: /" .. path)
 		end
+		io.write("\n")
 	end
 end
 
@@ -160,8 +164,12 @@ local function write_col(str, len, c, last)
 		str = tostring(str)
 		if not dont_log_to_file then
 			if team_updated then
+				if LOG_BY_TEAM_UPDATE and not dir_created then
+					util.mkdir(log_path .. "\\" .. dir_name)
+					dir_created = true
+				end
 				local dir = log_path .. "/" .. dir_name .. "/"
-				local fn = team_index .. team_name .. ".log"
+				local fn = team_index .. team_name .. file_ext
 				log_file = assert(io.open(dir .. fn, "w"))
 				team_index = team_index + 1
 				team_updated = false
@@ -264,8 +272,9 @@ function util.init()
 	io.write("\27[4m", gradient.generate(" ASS Damage ", {255, 100, 255}, {100, 255, 255}))
 	io.write(gradient.generate("Logger v" .. GAME_VERSION, {100, 255, 255}, {100, 255, 100}))
 	util.reset_style()
-	io.write(" by Ame\n\n")
+	io.write(" by Ame\n")
 	util.open_log()
+	io.write("\n")
 end
 
 return util
