@@ -16,8 +16,7 @@ Proof-of-concept packet damage logger for anime game with Akebi-Sniffer-Scriptin
     - In the settings window, enable "Pass-through mode" (requires disabling packet level filter).
     - In the script, set the `REALTIME_LOGGING` option to `true`.
     - Load into a scene, change teams, or swap characters in the party setup tab to capture the team update packet (**very important**).
-    - Do stuff.
-    - Wait for queue size to hit 0 to get full results.
+    - Do stuff and see logs output in realtime.
     - This is the least memory consuming method, but with the downside that no packets get saved at all. This means that you can't reapply the filter or reload the script without losing data.
   - Method 2: Realtime logging **with** saving packets
     - Basically the same as the previous method, except pass-through mode is disabled.
@@ -26,11 +25,10 @@ Proof-of-concept packet damage logger for anime game with Akebi-Sniffer-Scriptin
     - In the settings window, enable "Packet level filter".
     - In the script, set the `REALTIME_LOGGING` option to `false`.
     - I recommend that you first disconnect the pipe in settings while preparing to log a rotation, and clearing packets if there are any (right click any packet in the capture window and a context menu should open, press "Clear"). Reload the script after you do so.
-    - Whenever you're ready, make sure that you connect the pipe again **BEFORE** changing scenes or swapping teams. This is to capture the packet telling the server the characters you're using, which the script needs.
+    - Whenever you're ready, make sure that you connect the pipe again **before** changing scenes or swapping teams. This is to capture the packet telling the server the characters you're using, which the script needs.
     - Do stuff once you're connected.
-    - To actually "log" the damage, you can disconnect the pipe again now (to save memory). If you see packets are still flooding, check the packet queue size on the menu bar.
-    - Once the queue size is 0, now you have to **DISABLE** packet level filter and then hit apply to generate logs.
-    - From here you can clear your saved packets again to save memory and do it over again. Remember to turn packet level filter back **ON**.
+    - You can disconnect the pipe again now (to save memory). To actually "log" the damage, first **disable** packet level filter and then press apply.
+    - From here you can clear your saved packets again to save memory and do it over again. Remember to turn packet level filter back **on**.
     - Clear the console by reloading the script. You can also mess with the configs. Do whatever.
     - This was originally the only method, and it's still a good balance between flexibility and memory consumption, if you really need to save packets. Otherwise, the first method should almost always be used.
   
