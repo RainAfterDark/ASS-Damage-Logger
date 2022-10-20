@@ -177,7 +177,8 @@ function resolver.get_source(attacker, caster, element, aid, defender)
 		return gadget
 
     elseif type == "Avatar" then
-		if aid and avatar_abilities[attacker][aid] then
+		if avatar_abilities[attacker] 
+		and avatar_abilities[attacker][aid] then
 			return avatar_abilities[attacker][aid]
 		end
 		return "Direct"
@@ -187,11 +188,14 @@ function resolver.get_source(attacker, caster, element, aid, defender)
 end
 
 function resolver.get_reaction(aid, mid, element, attacker)
-	if aid == 2 and mid == 5 and element == "Dendro" then
-		return "Bloom"
-	elseif aid == 1 and mid == 2 and element == "Dendro" 
-	and resolver.get_root(attacker) ~= "Collei" then --holy cope conditions but whatever
-		return "Hyperbloom"
+	if element == "Dendro" then
+		if aid == 2 then
+			if mid == 5 then return "Bloom"
+			elseif mid == 4 then return "BountifulBloom" end
+		elseif aid == 1 and mid == 2
+		and resolver.get_root(attacker) ~= "Collei" then --holy cope conditions but whatever
+			return "Hyperbloom"
+		end
 	end
 
 	local reaction = reaction_names[aid]
