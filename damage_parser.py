@@ -1,14 +1,13 @@
-from pathlib import Path
+import sys
 import re
 
-path = Path(__file__).parent
-
 # only works with one team at a time, log files with multiple teams and rotations will be combined together
-log_file = open(path / "../../latest.txt")
+# also accounts all damage occurences in the log (including damage done to avatars), so please filter beforehand
+log_file = open(sys.argv[1]) # open("path_to_file")
 
 col = {}
-labels = ["type", "uid", "time", "delta", "source", "attacker", "damage", "crit", "apply",
-          "element", "reaction", "amp_type", "amp_rate", "count", "aid", "mid", "defender"]
+labels = ("type", "uid", "time", "delta", "source", "attacker", "damage", "crit", "eda",
+          "element", "reaction", "amp_type", "amp_rate", "count", "aid", "mid", "defender")
 for i in range(len(labels)):
     col[labels[i]] = i
 
@@ -25,18 +24,12 @@ for line in log_file:
         reaction = row[col["reaction"]]
         if reaction != "None":
             attacker = row[col["attacker"]]
-            if reaction not in occurence_table:
-                occurence_table[reaction] = {}
-            if damage not in occurence_table[reaction]:
-                occurence_table[reaction][damage] = {}
-            if attacker not in occurence_table[reaction][damage]:
-                occurence_table[reaction][damage][attacker] = 0
+            occurence_table.setdefault(reaction, {}).setdefault(damage, {}).setdefault(attacker, 0)
             occurence_table[reaction][damage][attacker] += 1
 
 print("Reaction Occurences:")
 for reaction, damage_table in occurence_table.items():
-    if reaction not in reaction_table:
-        reaction_table[reaction] = {}
+    reaction_table.setdefault(reaction, {})
     for damage, occurences in damage_table.items():
         print(f"{reaction}: {damage} -> {occurences}")
         most_frequent = ""
@@ -64,12 +57,10 @@ for line in log_file:
         if damage == 0: continue
 
         attacker = row[col["attacker"]]
-        if attacker not in damage_table:
-            damage_table[attacker] = {
-                "Total": 0,
-                "Crit": {"true": 0, "false": 0},
-                "Apply": {"true": 0, "false": 0}
-            }
+        damage_table.setdefault(attacker, {
+            "Total": 0,
+            "Crit": {"true": 0, "false": 0}
+        })
         
         damage_table[attacker]["Total"] += damage
         total_damage += damage
@@ -82,29 +73,22 @@ for line in log_file:
                 uid = row[col["uid"]]
                 print(f"Resolved: {uid}, {attacker} -> {corrected}")
                 attacker = corrected
-            if reaction not in damage_table[attacker]:
-                damage_table[attacker][reaction] = 0
+            damage_table[attacker].setdefault(reaction, 0)
             damage_table[attacker][reaction] += damage
 
-            if reaction not in ownership_table:
-                ownership_table[reaction] = {}
-            if attacker not in ownership_table[reaction]:
-                ownership_table[reaction][attacker] = 0
+            ownership_table.setdefault(reaction, {}).setdefault(attacker, 0)
             ownership_table[reaction][attacker] += 1
         
         else:
             damage_table[attacker]["Crit"][row[col["crit"]]] += 1
-            damage_table[attacker]["Apply"][row[col["apply"]]] += 1
 
             source = row[col["source"]]
-            if source not in damage_table[attacker]:
-                damage_table[attacker][source] = 0
+            damage_table[attacker].setdefault(source, 0)
             damage_table[attacker][source] += damage
 
             amp_type = row[col["amp_type"]]
             if amp_type == "None": continue
-            if amp_type not in damage_table[attacker]:
-                damage_table[attacker][amp_type] = 0
+            damage_table[attacker].setdefault(amp_type, 0)
             damage_table[attacker][amp_type] += damage
 
 time = total_time / 1000
@@ -117,7 +101,7 @@ for avatar, stats in damage_table.items():
     print(f"{avatar}: {round(damage):,} ({round(damage_percent, 2)}%)")
     for stat, val in stats.items():
         if stat == "Total": continue
-        if stat == "Crit" or stat == "Apply":
+        if stat == "Crit":
             rate = 0
             hits = val["true"]
             total_hits = hits + val["false"]
