@@ -202,14 +202,14 @@ function resolver.get_reaction(aid, mid, element, attacker)
 	if reaction then
         if(reaction == "Burning" and element ~= "Pyro") or
 		  (reaction == "Overload" and element ~= "Pyro") or
-          (reaction == "Electro-Charged" and element ~= "Electro") or
+          (reaction == "ElectroCharged" and element ~= "Electro") or
           (reaction == "Superconduct" and element ~= "Cryo") or
 		  (reaction == "Shatter" and element ~= "Physical") or
 		  (reaction == "Burgeon" and element ~= "Dendro") or
-		  (reaction == "Swirl (Pyro)" and element ~= "Pyro") or
-		  (reaction == "Swirl (Hydro)" and element ~= "Hydro") or
-		  (reaction == "Swirl (Electro)" and element ~= "Electro") or
-		  (reaction == "Swirl (Cryo)" and element ~= "Cryo") then
+		  (reaction == "SwirlPyro" and element ~= "Pyro") or
+		  (reaction == "SwirlHydro" and element ~= "Hydro") or
+		  (reaction == "SwirlElectro" and element ~= "Electro") or
+		  (reaction == "SwirlCryo" and element ~= "Cryo") then
             return "None"
         end
         return reaction
