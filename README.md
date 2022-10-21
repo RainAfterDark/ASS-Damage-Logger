@@ -3,18 +3,17 @@ Proof-of-concept packet damage logger for anime game with Akebi-Sniffer-Scriptin
 
 ## Usage
 - Setting up Akebi and Sniffer
-  - Build [Akebi](https://github.com/Akebi-Group/Akebi-GC) or get the latest artifact from their [actions](https://github.com/Akebi-Group/Akebi-GC/actions).
+  - Get the latest release of [Akebi](https://github.com/Akebi-Group/Akebi-GC).
   - Build my fork of [Akebi-PacketSniffer](https://github.com/RainAfterDark/Akebi-PacketSniffer) or download my [unofficial release](https://github.com/RainAfterDark/Akebi-PacketSniffer/releases). (until my [PR](https://github.com/Akebi-Group/Akebi-PacketSniffer/pull/10) gets merged)
-  - Highly recommend getting protos from [Sorapointa's](https://github.com/Sorapointa/Sorapointa-Protos) even if you have your own (your fields or enum names may be different).
   - After injecting the game with Akebi, open the menu, go to settings, and all the way down, turn on "Capturing".
-  - Open up the sniffer, set-up your protos and load the script `damage_logger.lua` from wherever you may have placed it. A simple video tutorial for setting up the sniffer should be in the repo's README.
+  - Open up the sniffer, set-up your protos (you can get [Sorapointa's](https://github.com/Sorapointa/Sorapointa-Protos)) and load the script `damage_logger.lua` from wherever you may have placed it. A simple video tutorial for setting up the sniffer should be in the repo's README.
   
 - Using the script
   - `git clone https://github.com/RainAfterDark/ASS-Damage-Logger.git`
   - Initial step: Add the script to the main filter and then press "Apply".
   - Method 1: Realtime logging **without** saving packets
     - In the settings window, enable "Pass-through mode" (requires disabling packet level filter).
-    - In the script, set the `REALTIME_LOGGING` option to `true`.
+    - In the script, set the `REALTIME_LOGGING` option to `true` (it's on by default).
     - Load into a scene, change teams, or swap characters in the party setup tab to capture the team update packet (**very important**).
     - Do stuff and see logs output in realtime.
     - This is the least memory consuming method, but with the downside that no packets get saved at all. This means that you can't reapply the filter or reload the script without losing data.
@@ -38,6 +37,4 @@ I have to mention that crashes can happen quite frequently for some reason I can
 - Updating/generating data: see `/data/README.md` and relevant scripts.
 - `damage_parser.py`: Simple DPS parser and experimental reaction ownership corrector. (not 100% accurate, see code for how it works)
 - Excel parser can be found [here](https://docs.google.com/spreadsheets/d/10rxAk7O8MLHZt5jacCHQrdzfP2-hOh-kk7TWJDj71sM/edit?usp=sharing), just clone import your data (as append) or paste your data and then split columns.
-  
-## Findings/Wiki/How It Works/What Doesn't Work/What Should Work section: TODO
  
