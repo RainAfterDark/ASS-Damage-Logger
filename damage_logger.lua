@@ -29,7 +29,7 @@ USE_REACTION_CORRECTION = false
 
 --#endregion
 
-GAME_VERSION = "3.0.5x"
+GAME_VERSION = "3.1.0"
 
 local packet_ids = require("data.packet_ids")
 local resolver = require("resolver")

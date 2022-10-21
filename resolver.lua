@@ -173,7 +173,8 @@ function resolver.get_source(attacker, caster, element, aid, defender)
 	end
 
     if type == "Gadget" then
-		local gadget = gadget_names[gadget_config_ids[attacker]] or gadget_config_ids[attacker]
+		local gadget = gadget_names[gadget_config_ids[attacker]] 
+		or "Gadget_" .. gadget_config_ids[attacker]
 		return gadget
 
     elseif type == "Avatar" then
@@ -229,12 +230,10 @@ function resolver.add_avatar(guid, entity_id, avatar_id)
 end
 
 function resolver.add_ability_hash(avatar_id, aid, hash)
-	if ability_hashes[hash] then
-		if not avatar_abilities[avatar_id] then
-			avatar_abilities[avatar_id] = {}
-		end
-		avatar_abilities[avatar_id][aid] = ability_hashes[hash]
+	if not avatar_abilities[avatar_id] then
+		avatar_abilities[avatar_id] = {}
 	end
+	avatar_abilities[avatar_id][aid] = ability_hashes[hash] or "Ability_" .. hash
 end
 
 function resolver.add_monster(entity_id, monster_id)
