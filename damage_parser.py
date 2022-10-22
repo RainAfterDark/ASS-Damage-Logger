@@ -69,10 +69,10 @@ def parse_log(lines, use_correction):
             attacker = row[col.attacker]
             occurence_table[reaction][damage][attacker] += 1
 
-        print("\nReaction Occurences:")
+        print("\n\tReaction Occurences:")
         for reaction, damage_table in occurence_table.items():
             for damage, occurences in damage_table.items():
-                print(f"{reaction}: {damage} -> {dict(occurences)}")
+                print(f"\t{reaction}: {damage} -> {dict(occurences)}")
 
     total_damage, total_time = 0, -1
     damage_table = nested_dd(2, int) # attacker (str): stat (str): defaultdict(int)
@@ -98,7 +98,7 @@ def parse_log(lines, use_correction):
 
                 if attacker != corrected:
                     uid = row[col.uid]
-                    print(f"[UID {uid}] Corrected {reaction} source: {attacker} -> {corrected}")
+                    print(f"\t[UID {uid}] Corrected {reaction} source: {attacker} -> {corrected}")
                     attacker = corrected
             
             damage_table[attacker][reaction]["dmg"] += damage
@@ -115,11 +115,11 @@ def parse_log(lines, use_correction):
 
     time = total_time / 1000
     dps = total_damage / time if time > 0 else 0
-    print(f"\nTotal Damage: {round(total_damage):,}, Time: {time}s, DPS: {round(dps):,}")
+    print(f"\n\tTotal Damage: {round(total_damage):,}, Time: {time}s, DPS: {round(dps):,}")
 
     for avatar, stats in damage_table.items():
         avatar_dmg = stats["Total"]["dmg"] 
-        print(f"{avatar}: {round(avatar_dmg):,} ({round(avatar_dmg / total_damage * 100, 2)}%)")
+        print(f"\t{avatar}: {round(avatar_dmg):,} ({round(avatar_dmg / total_damage * 100, 2)}%)")
         
         for stat, val in stats.items():   
             match stat:
@@ -128,17 +128,17 @@ def parse_log(lines, use_correction):
                     hits = val["true"]
                     total = hits + val["false"]
                     rate = hits / total * 100 if total > 0 else 0
-                    print(f"\t{stat} Rate: {hits}/{total} ({round(rate, 2)}%)")
+                    print(f"\t\t{stat} Rate: {hits}/{total} ({round(rate, 2)}%)")
                     continue        
                 case _:
                     dmg = val["dmg"]
-                    print(f"\t{stat}: {round(dmg):,} ({round(dmg / avatar_dmg * 100, 2)}%)")
+                    print(f"\t\t{stat}: {round(dmg):,} ({round(dmg / avatar_dmg * 100, 2)}%)")
 
-    print("\nReaction Ownership:")
+    print("\n\tReaction Ownership:")
     for reaction, owners in ownership_table.items():
-        print(f"{reaction}:")
+        print(f"\t{reaction}:")
         for avatar, count in owners.items():
-            print(f"\t{avatar}: {count}")
+            print(f"\t\t{avatar}: {count}")
 
 def main():
     lines, e = try_open(arg(0)) # try to open log from provided arg
@@ -162,23 +162,16 @@ def main():
 
     use_correction = str2bool(arg(1) or input("\nUse reaction correction? (Y/N, default N): "))
 
-    rot_idxs = [i for i, v in enumerate(lines) if v.startswith("TEAM")]
-    rotations = [lines[i:j] for i, j in zip([0] + rot_idxs, rot_idxs)]
+    team_idxs = [i for i, v in enumerate(lines) if v.startswith("TEAM")]
+    idxa, idxb = [0] + team_idxs, team_idxs + [len(lines)]
+    rotations = [lines[a:b] for a, b in zip(idxa, idxb) if b - a > 1]
 
-    if rotations:
-        for i, rot in enumerate(rotations):
-            skip = " (skipped)" if len(rot) < 2 else ""
-            team = (rot[0][5:].replace(",", ", ")
-                    if rot[0].startswith("TEAM")
-                    else "(no team header)")
-            print(f"\nRotation {i}: {team}{skip}")
-            if skip: continue
-            try: parse_log(rot, use_correction)
-            except Exception: logging.error(traceback.format_exc())
-    else:
-        parse_log(lines, use_correction)
+    for i, rot in enumerate(rotations):
+        team = (rot[0][5:].replace(",", ", ")
+                if rot[0].startswith("TEAM")
+                else "(no team header)")
+        print(f"\nRotation {i}: {team}")
+        try: parse_log(rot, use_correction)
+        except Exception: logging.error(traceback.format_exc())
 
-while __name__ == "__main__":
-    try: main()
-    except Exception: logging.error(traceback.format_exc())
-    finally: args.clear()
+while __name__ == "__main__": main(); args.clear()
