@@ -38,12 +38,15 @@ def str2bool(str):
     return str.lower() in ("true", "t", "yes", "y", "1")
 
 def try_open(path):
+    lines, err = [], None
     try:
-        with open(path) as file:
-            lines = [line.strip() for line in file]
-            return lines, None
+        with open(path, "r") as file:
+            lines = file.read().splitlines()
     except Exception as e:
-        return [], e
+        err = e
+    finally:
+        fname = re.split(r"\/|\\", path)[-1] if path else None
+        return fname, lines, err
 
 def nested_dd(depth, default_factory):
     return defaultdict(default_factory if depth < 1
@@ -140,28 +143,30 @@ def parse_log(lines, use_correction):
         for avatar, count in owners.items():
             print(f"\t\t{avatar}: {count}")
 
+rot_n = 0
 def main():
-    lines, e = try_open(arg(0)) # try to open log from provided arg
+    global rot_n
+    fname, lines, err = try_open(arg(0)) # try to open log from provided arg
 
     if not lines: # try to open log from input if no/invalid first arg
-        if arg(0): print(e) # print error if arg was provided
+        if arg(0): print(err) # print error if arg was provided
         first_line = input("\nEnter log file path or paste logs directly:\n")
-        lines, e = try_open(first_line)
+        fname, lines, err = try_open(first_line)
 
         if not lines: # try to determine if input was a path or a pasted log
             # there should be a better way to do this but logs will never contain slashes anyway
             if re.search(r"\/|\\", first_line):
-                print(e) # print error if input was path
+                print(err) # print error if input was path
                 return # start over
                 
+            fname = "pasted log"
             lines.append(first_line) # (assumed pasted log at this point) append first line of paste
             while True: # handle pasted newlines, break loop and start processing after empty input
                 line = input()
                 if not line: break
                 lines.append(line.strip())
 
-    use_correction = str2bool(arg(1) or input("\nUse reaction correction? (Y/N, default N): "))
-
+    # group lines into smaller lists if multiple teams are present to handle multi-rotation logs
     team_idxs = [i for i, v in enumerate(lines) if v.startswith("TEAM")]
     idxa, idxb = [0] + team_idxs, team_idxs + [len(lines)]
     rotations = [lines[a:b] for a, b in zip(idxa, idxb) if b - a > 1]
@@ -170,8 +175,18 @@ def main():
         team = (rot[0][5:].replace(",", ", ")
                 if rot[0].startswith("TEAM")
                 else "(no team header)")
-        print(f"\nRotation {i}: {team}")
-        try: parse_log(rot, use_correction)
+        print(f"\nRotation {i + rot_n}: {team}")
+        # always asking might be annoying but I think this is for the better atm
+        # hopefuly this entire thing can be deprecated once the logger's accuracy improves
+        ask_rc_str = "Use reaction correction? (Y/N, default N): "
+        try: parse_log(rot, str2bool(arg(1) or input(ask_rc_str)))
         except Exception: logging.error(traceback.format_exc())
+    
+    if rotations:
+        rot_n += len(rotations)
+        print(f"\nFinished parsing {fname}.")
+    else:
+        print("Insufficient input.")
 
-while __name__ == "__main__": main(); args.clear()
+if __name__ == "__main__":
+    while True: main(); args.clear()
