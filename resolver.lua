@@ -233,7 +233,7 @@ function resolver.add_ability_hash(avatar_id, aid, hash)
 	if not avatar_abilities[avatar_id] then
 		avatar_abilities[avatar_id] = {}
 	end
-	avatar_abilities[avatar_id][aid] = ability_hashes[hash] or "Ability_" .. hash
+	avatar_abilities[avatar_id][aid] = ability_hashes[hash] or ("Ability_" .. hash)
 end
 
 function resolver.add_monster(entity_id, monster_id)

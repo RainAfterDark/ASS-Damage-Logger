@@ -58,5 +58,7 @@ local avatar_names = {
 	[10000070] = "Nilou",
 	[10000071] = "Cyno",
 	[10000072] = "Candace",
+	[10000073] = "Nahida",
+	[10000074] = "Layla"
 }
 return avatar_names

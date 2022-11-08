@@ -2,7 +2,6 @@ local util = {}
 
 local theme = require("output.theme")
 local gradient = require("output.gradient")
-local avatar_codes = require("data.avatar_codes")
 
 --#region String and number manipulation
 function util.trim(str, len)
@@ -229,7 +228,7 @@ function util.write_header(team_avatars, offsets)
 	else
 		team_name = ""
 		for _, v in ipairs(team_avatars) do
-			team_name = team_name .. "-" .. avatar_codes[v]
+			team_name = team_name .. "-" .. v:gsub(" ", "")
 		end
 		if log_file then
 			log_file:close()

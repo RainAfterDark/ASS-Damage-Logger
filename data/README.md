@@ -1,24 +1,19 @@
 # Upkeeping
-Files/directories must be in the same directory as the scripts.
+Provide resources directory path in `data_gen.py` and run.
 
-### ability_hasher.py
-Generates `ability_hashes.lua`
-- `/BinOutput/Avatar`
-- `/BinOutput/AbilityPath/AbilityPathData.json`
-- `/BinOutput/AbilityGroup/AbilityGroup_Other_PlayerElementAbility.json`
-- `/ExcelBinOutput/AvatarSkillExcelConfigData.json`
-
-### skill_excel_to_lua.py
-Generates `skill_names.lua`
-- `/ExcelBinOutput/AvatarSkillExcelConfigData.json`
+## Dependencies
 - `/TextMap/TextMapEN.json` or language of choice
 
-### gadget_excel_to_lua.py
-Generates `gadget_names.lua`
+### For abilities and skills
+- `/ExcelBinOutput/AvatarSkillExcelConfigData.json`
+- `/BinOutput/Avatar`
+- `/BinOutput/AbilityGroup`
+- `/BinOutput/Ability/Temp`
+- `/BinOutput/Gadget`
+
+### For gadgets
 - `/ExcelBinOutput/GadgetExcelConfigData.json`
 
-### monster_names_to_lua.py
-Generates `monster_names.lua`
+### For monsters
 - `/ExcelBinOutput/MonsterExcelConfigData.json`
 - `/ExcelBinOutput/MonsterDescribeExcelConfigData.json`
-- `/TextMap/TextMapEN.json` or language of choice
