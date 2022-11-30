@@ -56,7 +56,7 @@ local theme = {
         ["Xingqiu"] = 38,
         ["Tartaglia"] = 39,
         ["Mona"] = 111,
-        ["Kokomi"] = 153,
+        ["Kokomi"] = 189,
         ["Yelan"] = 75,
         ["Ayato"] = 45,
         ["Nilou"] = 74,
@@ -72,6 +72,7 @@ local theme = {
         ["Eula"] = 195,
         ["Aloy"] = 231,
         ["Shenhe"] = 81,
+        ["Layla"] = 117,
         --Anemo
         ["Jean"] = 84,
         ["Venti"] = 85,
@@ -80,6 +81,8 @@ local theme = {
         ["Kazuha"] = 122,
         ["Sayu"] = 121,
         ["Heizou"] = 157,
+        ["Wanderer"] = 45,
+        ["Faruzan"] = 87,
         --Geo
         ["Ningguang"] = 221,
         ["Zhongli"] = 220,    
@@ -91,6 +94,7 @@ local theme = {
         --Dendro
         ["Collei"] = 155,
 	    ["Tighnari"] = 154,
+        ["Nahida"] = 118
     }
 }
 

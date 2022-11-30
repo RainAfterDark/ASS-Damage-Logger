@@ -29,9 +29,8 @@ USE_REACTION_CORRECTION = false
 
 --#endregion
 
-GAME_VERSION = "3.2.0"
+GAME_VERSION = "3.2.5x"
 
-local packet_ids = require("data.packet_ids")
 local resolver = require("resolver")
 local util = require("output.util")
 util.init()
@@ -56,10 +55,10 @@ end
 function on_filter(packet)
 
 	local uid = packet:uid()
-	local pid = packet:mid()
+	local pname = packet:name()
 
 	--Packet is always sent when loading into a new scene / changing teams (even just swapping characters around)
-	if pid == packet_ids.SceneTeamUpdateNotify then
+	if pname == "SceneTeamUpdateNotify" then
 		local fc = filter_check(uid)
 		if fc ~= nil then return fc end
 
@@ -102,7 +101,7 @@ function on_filter(packet)
 		util.write_header(team_avatars, offsets)
 		return SHOW_PACKETS_ON_FILTER
 	
-	elseif pid == packet_ids.SceneEntityAppearNotify then
+	elseif pname == "SceneEntityAppearNotify" then
 		local fc = filter_check(uid)
 		if fc ~= nil then return fc end
 
@@ -128,7 +127,7 @@ function on_filter(packet)
 		return false
 	end
 
-	if pid == packet_ids.EvtCreateGadgetNotify then
+	if pname == "EvtCreateGadgetNotify" then
 		local node = packet:content():node()
 		local entity_id = get(node, "entity_id")
 		
@@ -140,11 +139,11 @@ function on_filter(packet)
 		return true
 	end
 
-	if pid == packet_ids.UnionCmdNotify then
+	if pname == "UnionCmdNotify" then
 		if last_uid > uid then return false end
 		return true
 	
-	elseif pid == packet_ids.CombatInvocationsNotify then
+	elseif pname == "CombatInvocationsNotify" then
 		local node = packet:content():node()
 		local list = get(node, "invoke_list")[1]:get()
 		local arg = get(list, "argument_type")
@@ -192,7 +191,7 @@ function on_filter(packet)
 			return SHOW_PACKETS_ON_FILTER
 		end
 	
-	elseif pid == packet_ids.AbilityInvocationsNotify then
+	elseif pname == "AbilityInvocationsNotify" then
 		local node = packet:content():node()
 		local list = get(node, "invokes")[1]:get()
 		local arg = get(list, "argument_type")
@@ -226,7 +225,7 @@ function on_filter(packet)
 			return SHOW_PACKETS_ON_FILTER
 		end
 	
-	elseif pid == packet_ids.EvtDoSkillSuccNotify then
+	elseif pname == "EvtDoSkillSuccNotify" then
 		local fc = filter_check(uid)
 		if fc ~= nil then return fc end
 		if not LOG_SKILL_CASTS then return false end

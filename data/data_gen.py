@@ -7,8 +7,13 @@ bin_path = resource_path / "BinOutput\\"
 excel_path = resource_path / "ExcelBinOutput\\"
 textmap_path = resource_path / "TextMap\\TextMapEN.json"
 
-with open(textmap_path, encoding="utf-8") as f:
-    textmap_data = json.load(f)
+def main():
+    with open(textmap_path, encoding="utf-8") as f:
+        textmap_data = json.load(f)
+    gen_ability_hashes()
+    #gen_skill_names(textmap_data)
+    #gen_gadget_names()
+    #gen_monster_names(textmap_data)
 
 def gen_ability_hashes():
     print("Generating ability hashes...")
@@ -68,7 +73,7 @@ def gen_ability_hashes():
 
     print(f"Generated {len(hashes.keys())} ability hashes")
 
-def gen_skill_names():
+def gen_skill_names(textmap_data):
     print("Generating skill names...")
     skills, skips = {}, []
 
@@ -110,7 +115,7 @@ def gen_gadget_names():
 
     print(f"Generated {len(gadgets)} gadget names (skipped {len(skips)})")
 
-def gen_monster_names():
+def gen_monster_names(textmap_data):
     print("Generating monster names...")
     describes = {}
     monsters = {}
@@ -140,8 +145,4 @@ def gen_monster_names():
     
     print(f"Generated {len(monsters)} monster names")
 
-if __name__ == "__main__":
-    gen_ability_hashes()
-    gen_skill_names()
-    gen_gadget_names()
-    gen_monster_names()
+if __name__ == "__main__": main()

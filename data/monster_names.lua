@@ -791,5 +791,6 @@ local monster_names = {
 	[36090890] = "Partner_Fumgus_Deux_Epsilon_Wind",
 	[36090990] = "Partner_Fumgus_Deux_Beta_Rock",
 	[36091090] = "Partner_Fumgus_Deux_Delta_Electric",
+	[29070106] = "???",
 }
 return monster_names
