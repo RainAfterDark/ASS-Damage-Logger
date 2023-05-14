@@ -1,3 +1,5 @@
+## Note: This is already quite outdated. I've made a much better and easier to use version of this in [AGDL](https://github.com/RainAfterDark)
+
 # ASS-Damage-Logger
 Proof-of-concept packet damage logger for anime game with Akebi-Sniffer-Scripting (ASS)
 
